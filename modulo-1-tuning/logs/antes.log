@@ -1,0 +1,347 @@
+
+===================================================================
+CENARIO 1: Itens de um pedido (chave estrangeira sem indice)
+===================================================================
+
+Explained.
+
+Elapsed: 00:00:00.07
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 2581050000
+
+---------------------------------------------------------------------------------------------
+| Id  | Operation                    | Name         | Rows  | Bytes | Cost (%CPU)| Time     |
+---------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT             |              |     2 |    82 | 10835   (1)| 00:00:01 |
+|   1 |  NESTED LOOPS                |              |     2 |    82 | 10835   (1)| 00:00:01 |
+|   2 |   NESTED LOOPS               |              |     2 |    82 | 10835   (1)| 00:00:01 |
+|*  3 |    TABLE ACCESS FULL         | ITENS_PEDIDO |     2 |    48 | 10833   (1)| 00:00:01 |
+|*  4 |    INDEX UNIQUE SCAN         | PK_PRODUTOS  |     1 |       |     0   (0)| 00:00:01 |
+|   5 |   TABLE ACCESS BY INDEX ROWID| PRODUTOS     |     1 |    17 |     1   (0)| 00:00:01 |
+---------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   3 - filter("I"."PEDIDO_ID"=1234567)
+   4 - access("P"."PRODUTO_ID"="I"."PRODUTO_ID")
+
+Note
+-----
+   - this is an adaptive plan
+
+22 rows selected.
+
+Elapsed: 00:00:00.43
+
+Elapsed: 00:00:01.29
+
+Statistics
+----------------------------------------------------------
+          1  recursive calls
+          0  db block gets
+      39570  consistent gets
+          0  physical reads
+          0  redo size
+        901  bytes sent via SQL*Net to client
+        108  bytes received via SQL*Net from client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          1  rows processed
+
+
+Elapsed: 00:00:00.42
+
+Statistics
+----------------------------------------------------------
+          0  recursive calls
+          0  db block gets
+      39571  consistent gets
+          0  physical reads
+          0  redo size
+        901  bytes sent via SQL*Net to client
+        108  bytes received via SQL*Net from client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          1  rows processed
+
+
+===================================================================
+CENARIO 2: Ultimos 20 pedidos de um cliente
+===================================================================
+
+Explained.
+
+Elapsed: 00:00:00.01
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 2158747331
+
+-----------------------------------------------------------------------------------
+| Id  | Operation               | Name    | Rows  | Bytes | Cost (%CPU)| Time     |
+-----------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT        |         |    20 |   580 |  8013   (1)| 00:00:01 |
+|*  1 |  COUNT STOPKEY          |         |       |       |            |          |
+|   2 |   VIEW                  |         |    25 |   725 |  8013   (1)| 00:00:01 |
+|*  3 |    SORT ORDER BY STOPKEY|         |    25 |   850 |  8013   (1)| 00:00:01 |
+|*  4 |     TABLE ACCESS FULL   | PEDIDOS |    25 |   850 |  8012   (1)| 00:00:01 |
+-----------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter(ROWNUM<=20)
+   3 - filter(ROWNUM<=20)
+   4 - filter("CLIENTE_ID"=4242)
+
+18 rows selected.
+
+Elapsed: 00:00:00.06
+
+20 rows selected.
+
+Elapsed: 00:00:02.01
+
+Statistics
+----------------------------------------------------------
+          1  recursive calls
+          0  db block gets
+      42939  consistent gets
+      29477  physical reads
+          0  redo size
+       1647  bytes sent via SQL*Net to client
+        133  bytes received via SQL*Net from client
+          3  SQL*Net roundtrips to/from client
+          1  sorts (memory)
+          0  sorts (disk)
+         20  rows processed
+
+
+20 rows selected.
+
+Elapsed: 00:00:00.22
+
+Statistics
+----------------------------------------------------------
+          0  recursive calls
+          0  db block gets
+      42939  consistent gets
+      29477  physical reads
+          0  redo size
+       1647  bytes sent via SQL*Net to client
+        133  bytes received via SQL*Net from client
+          3  SQL*Net roundtrips to/from client
+          1  sorts (memory)
+          0  sorts (disk)
+         20  rows processed
+
+
+===================================================================
+CENARIO 3: Pedidos de um dia (funcao TRUNC na coluna) - depois: intervalo de datas
+===================================================================
+
+Explained.
+
+Elapsed: 00:00:00.01
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 53863893
+
+------------------------------------------------------------------------------
+| Id  | Operation          | Name    | Rows  | Bytes | Cost (%CPU)| Time     |
+------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT   |         |     1 |    13 |  8092   (2)| 00:00:01 |
+|   1 |  SORT AGGREGATE    |         |     1 |    13 |            |          |
+|*  2 |   TABLE ACCESS FULL| PEDIDOS | 50000 |   634K|  8092   (2)| 00:00:01 |
+------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - filter(TRUNC(INTERNAL_FUNCTION("DATA_PEDIDO"))=TO_DATE('
+              2025-03-15 00:00:00', 'syyyy-mm-dd hh24:mi:ss'))
+
+15 rows selected.
+
+Elapsed: 00:00:00.05
+
+Elapsed: 00:00:02.09
+
+Statistics
+----------------------------------------------------------
+          1  recursive calls
+          0  db block gets
+      42939  consistent gets
+      29477  physical reads
+          0  redo size
+        698  bytes sent via SQL*Net to client
+        108  bytes received via SQL*Net from client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          1  rows processed
+
+
+Elapsed: 00:00:01.95
+
+Statistics
+----------------------------------------------------------
+          1  recursive calls
+          0  db block gets
+      42939  consistent gets
+      29477  physical reads
+          0  redo size
+        698  bytes sent via SQL*Net to client
+        108  bytes received via SQL*Net from client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          1  rows processed
+
+
+===================================================================
+CENARIO 4: Busca por CPF (comparacao com numero) - depois: comparacao com texto
+===================================================================
+
+Explained.
+
+Elapsed: 00:00:00.05
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 677081812
+
+------------------------------------------------------------------------------
+| Id  | Operation         | Name     | Rows  | Bytes | Cost (%CPU)| Time     |
+------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |          |     1 |    58 |   566   (1)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| CLIENTES |     1 |    58 |   566   (1)| 00:00:01 |
+------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter(TO_NUMBER("CPF")=10000156954)
+
+SQL Analysis Report (identified by operation id/Query Block Name/Object Alias):
+-------------------------------------------------------------------------------
+
+   1 -  SEL$1 / "CLIENTES"@"SEL$1"
+           -  The following columns have predicates which preclude their
+              use as keys in index range scan. Consider rewriting the
+              predicates.
+                "CPF"
+
+22 rows selected.
+
+Elapsed: 00:00:00.45
+
+Elapsed: 00:00:00.10
+
+Statistics
+----------------------------------------------------------
+          1  recursive calls
+          0  db block gets
+       2039  consistent gets
+          0  physical reads
+        132  redo size
+        811  bytes sent via SQL*Net to client
+        108  bytes received via SQL*Net from client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          1  rows processed
+
+
+Elapsed: 00:00:00.06
+
+Statistics
+----------------------------------------------------------
+          0  recursive calls
+          0  db block gets
+       2038  consistent gets
+          0  physical reads
+          0  redo size
+        811  bytes sent via SQL*Net to client
+        108  bytes received via SQL*Net from client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          1  rows processed
+
+
+===================================================================
+CENARIO 5: Relatorio de um mes (tabela inteira x particao)
+===================================================================
+
+Explained.
+
+Elapsed: 00:00:00.02
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1522440553
+
+---------------------------------------------------------------------------------------
+| Id  | Operation           | Name    | Rows  | Bytes |TempSpc| Cost (%CPU)| Time     |
+---------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT    |         |   144K|  3255K|       |  9996   (1)| 00:00:01 |
+|   1 |  SORT ORDER BY      |         |   144K|  3255K|  5144K|  9996   (1)| 00:00:01 |
+|   2 |   HASH GROUP BY     |         |   144K|  3255K|  5144K|  9996   (1)| 00:00:01 |
+|*  3 |    TABLE ACCESS FULL| PEDIDOS |   144K|  3255K|       |  8015   (1)| 00:00:01 |
+---------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   3 - filter("DATA_PEDIDO">=TO_DATE(' 2025-09-01 00:00:00', 'syyyy-mm-dd
+              hh24:mi:ss') AND "DATA_PEDIDO"<TO_DATE(' 2025-10-01 00:00:00', 'syyyy-mm-dd
+              hh24:mi:ss'))
+
+17 rows selected.
+
+Elapsed: 00:00:00.05
+
+90 rows selected.
+
+Elapsed: 00:00:00.41
+
+Statistics
+----------------------------------------------------------
+          1  recursive calls
+          0  db block gets
+      42939  consistent gets
+      29477  physical reads
+          0  redo size
+       4362  bytes sent via SQL*Net to client
+        233  bytes received via SQL*Net from client
+          7  SQL*Net roundtrips to/from client
+          1  sorts (memory)
+          0  sorts (disk)
+         90  rows processed
+
+
+90 rows selected.
+
+Elapsed: 00:00:00.31
+
+Statistics
+----------------------------------------------------------
+          1  recursive calls
+          0  db block gets
+      42939  consistent gets
+      29477  physical reads
+          0  redo size
+       4362  bytes sent via SQL*Net to client
+        233  bytes received via SQL*Net from client
+          7  SQL*Net roundtrips to/from client
+          1  sorts (memory)
+          0  sorts (disk)
+         90  rows processed
+

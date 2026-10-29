@@ -1,0 +1,72 @@
+SQL> 
+SQL> -- Cenário 1: toda chave estrangeira usada em junções/consultas precisa de índice.
+SQL> -- (Sem ele, além da lentidão, um DELETE no pedido trava a tabela de itens inteira.)
+SQL> CREATE INDEX ix_itens_pedido ON itens_pedido (pedido_id);
+
+Index created.
+
+Elapsed: 00:00:54.81
+SQL> 
+SQL> -- Cenário 5: particionar PEDIDOS por mês, ONLINE (a tabela continua disponível
+SQL> -- para leitura e escrita durante a operação). Novos meses viram partições sozinhos.
+SQL> ALTER TABLE pedidos MODIFY
+  2    PARTITION BY RANGE (data_pedido) INTERVAL (NUMTOYMINTERVAL(1, 'MONTH'))
+  3    (PARTITION p_2023_01 VALUES LESS THAN (DATE '2023-02-01'))
+  4    ONLINE UPDATE INDEXES;
+
+Table altered.
+
+Elapsed: 00:01:13.14
+SQL> 
+SQL> -- Cenário 2: índice composto (cliente, data). Atende o filtro E a ordenação,
+SQL> -- então o Oracle lê só as 20 linhas que precisa. Também cobre a FK de clientes.
+SQL> CREATE INDEX ix_pedidos_cliente_data ON pedidos (cliente_id, data_pedido);
+
+Index created.
+
+Elapsed: 00:00:32.12
+SQL> 
+SQL> -- Cenário 3: índice por data, LOCAL (um pedaço de índice por partição).
+SQL> -- O índice só é usado se a consulta não aplicar função na coluna:
+SQL> -- a correção principal é reescrever o filtro como intervalo de datas.
+SQL> CREATE INDEX ix_pedidos_data ON pedidos (data_pedido) LOCAL;
+
+Index created.
+
+Elapsed: 00:00:20.78
+SQL> 
+SQL> -- Cenário 4: não há o que criar. O índice do CPF já existe; a consulta é que
+SQL> -- compara texto com número e força o Oracle a converter a coluna (TO_NUMBER),
+SQL> -- o que impede o uso do índice. A correção é na aplicação: comparar com texto.
+SQL> 
+SQL> -- Estatísticas atualizadas depois das mudanças
+SQL> EXEC DBMS_STATS.GATHER_TABLE_STATS(USER, 'PEDIDOS', cascade => TRUE)
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:29.12
+SQL> EXEC DBMS_STATS.GATHER_TABLE_STATS(USER, 'ITENS_PEDIDO', cascade => TRUE)
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:09.58
+SQL> 
+SQL> SET ECHO OFF
+
+Partições criadas em PEDIDOS:
+
+ PARTICOES     LINHAS                                                                                                                                                                                   
+---------- ----------                                                                                                                                                                                   
+        34    5000000                                                                                                                                                                                   
+
+Elapsed: 00:00:00.16
+
+INDEX_NAME                   PAR STATUS                                                                                                                                                                 
+---------------------------- --- --------                                                                                                                                                               
+IX_ITENS_PEDIDO              NO  VALID                                                                                                                                                                  
+PK_ITENS                     NO  VALID                                                                                                                                                                  
+IX_PEDIDOS_CLIENTE_DATA      NO  VALID                                                                                                                                                                  
+IX_PEDIDOS_DATA              YES N/A                                                                                                                                                                    
+PK_PEDIDOS                   NO  VALID                                                                                                                                                                  
+
+Elapsed: 00:00:00.11
