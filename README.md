@@ -2,6 +2,8 @@
 
 > Atividades clássicas de um DBA Oracle feitas de ponta a ponta num ambiente que imita um servidor real: **Oracle AI Database 26ai Free** instalado por RPM num **Oracle Linux 10** (máquina virtual). Cada módulo traz os scripts, as evidências (logs) e o resultado medido.
 
+> ⚠️ **Laboratório, não execute em produção.** Os scripts foram escritos para este ambiente (usuário `LAB`, PDB `FREEPDB1`, tabelas e caminhos da VM) e vários são destrutivos de propósito: apagam arquivos de dados, fazem `DELETE` em massa, voltam o banco no tempo, criam e apagam usuários e reiniciam a instância. Use-os como referência e adapte em um ambiente de testes. O trecho mais reaproveitável é a rotina [`backup_rman.sh`](modulo-2-backup/backup_rman.sh); as políticas do módulo 3 servem de modelo trocando os nomes de tabelas e colunas.
+
 | Módulo | Tema | Situação |
 |---|---|---|
 | [1. Tuning de desempenho](#módulo-1-tuning-de-desempenho) | Planos de execução, índices, reescrita de SQL e particionamento online | ✅ Concluído |
