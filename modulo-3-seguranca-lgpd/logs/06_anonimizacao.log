@@ -1,0 +1,105 @@
+SQL> ALTER SESSION SET CONTAINER = FREEPDB1;
+
+Session altered.
+
+SQL> 
+SQL> -- Registro de cada solicitação atendida (prova de cumprimento, sem dado pessoal)
+SQL> CREATE TABLE seg_admin.solicitacoes_titular (
+  2    protocolo     VARCHAR2(20) CONSTRAINT pk_solicitacoes PRIMARY KEY,
+  3    cliente_id    NUMBER	  NOT NULL,
+  4    tipo	     VARCHAR2(20) NOT NULL,
+  5    atendida_em   TIMESTAMP	  DEFAULT SYSTIMESTAMP NOT NULL,
+  6    executada_por VARCHAR2(128) DEFAULT SYS_CONTEXT('USERENV', 'SESSION_USER') NOT NULL
+  7  );
+
+Table created.
+
+SQL> 
+SQL> -- SELECT também é exigido: o UPDATE filtra por cliente_id (SQL92_SECURITY)
+SQL> GRANT SELECT, UPDATE ON lab.clientes TO seg_admin;
+
+Grant succeeded.
+
+SQL> 
+SQL> CREATE OR REPLACE PROCEDURE seg_admin.anonimizar_cliente (p_cliente_id NUMBER, p_protocolo VARCHAR2)
+  2  AS
+  3  BEGIN
+  4    UPDATE lab.clientes
+  5  	  SET nome  = 'Titular anonimizado',
+  6  	      cpf   = 'X' || LPAD(p_cliente_id, 10, '0'),   -- continua único, mas não é um CPF
+  7  	      email = NULL
+  8  	WHERE cliente_id = p_cliente_id;
+  9    IF SQL%ROWCOUNT = 0 THEN
+ 10  	 RAISE_APPLICATION_ERROR(-20001, 'Cliente ' || p_cliente_id || ' nao encontrado');
+ 11    END IF;
+ 12    INSERT INTO seg_admin.solicitacoes_titular (protocolo, cliente_id, tipo)
+ 13    VALUES (p_protocolo, p_cliente_id, 'ELIMINACAO');
+ 14    COMMIT;
+ 15  END;
+ 16  /
+
+Procedure created.
+
+SQL> SHOW ERRORS PROCEDURE seg_admin.anonimizar_cliente
+No errors.
+SQL> 
+SQL> COLUMN nome FORMAT A20
+SQL> COLUMN cpf FORMAT A12
+SQL> COLUMN email FORMAT A24
+SQL> PROMPT >>> Antes
+>>> Antes
+SQL> SELECT cliente_id, nome, cpf, email, uf, data_cadastro FROM lab.clientes WHERE cliente_id = 4242;
+
+CLIENTE_ID NOME                 CPF          EMAIL                    UF DATA_CADA
+---------- -------------------- ------------ ------------------------ -- ---------
+      4242 Cliente 4242         10000156954  cliente4242@exemplo.com  RJ 18-MAY-22
+
+SQL> SELECT COUNT(*) AS pedidos, SUM(valor_total) AS total_comprado FROM lab.pedidos WHERE cliente_id = 4242;
+
+   PEDIDOS TOTAL_COMPRADO
+---------- --------------
+        28       17196.79
+
+SQL> 
+SQL> EXEC seg_admin.anonimizar_cliente(4242, 'LGPD-2026-0001')
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> PROMPT >>> Depois: o titular não é mais identificável; o histórico de compras continua
+>>> Depois: o titular não é mais identificável; o histórico de compras continua
+SQL> SELECT cliente_id, nome, cpf, email, uf, data_cadastro FROM lab.clientes WHERE cliente_id = 4242;
+
+CLIENTE_ID NOME                 CPF          EMAIL                    UF DATA_CADA
+---------- -------------------- ------------ ------------------------ -- ---------
+      4242 Titular anonimizado  X0000004242                           RJ 18-MAY-22
+
+SQL> SELECT COUNT(*) AS pedidos, SUM(valor_total) AS total_comprado FROM lab.pedidos WHERE cliente_id = 4242;
+
+   PEDIDOS TOTAL_COMPRADO
+---------- --------------
+        28       17196.79
+
+SQL> SELECT * FROM seg_admin.solicitacoes_titular;
+
+PROTOCOLO            CLIENTE_ID TIPO                 ATENDIDA_EM
+-------------------- ---------- -------------------- ---------------------------------------------------------------------------
+EXECUTADA_POR
+--------------------------------------------------------------------------------------------------------------------------------
+LGPD-2026-0001             4242 ELIMINACAO           30-OCT-26 09.02.39.504096 AM
+SYS
+
+
+SQL> 
+SQL> PROMPT >>> Atenção: o dado antigo ainda existe no UNDO (Flashback Query) e nos backups.
+>>> Atenção: o dado antigo ainda existe no UNDO (Flashback Query) e nos backups.
+SQL> PROMPT >>> Ele some sozinho quando o UNDO é reaproveitado e os backups saem da janela de 7 dias.
+>>> Ele some sozinho quando o UNDO é reaproveitado e os backups saem da janela de 7 dias.
+SQL> SELECT cliente_id, nome, cpf, email FROM lab.clientes
+  2    AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' SECOND) WHERE cliente_id = 4242;
+
+CLIENTE_ID NOME                 CPF          EMAIL
+---------- -------------------- ------------ ------------------------
+      4242 Cliente 4242         10000156954  cliente4242@exemplo.com
+
+SQL> SPOOL OFF

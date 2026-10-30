@@ -1,0 +1,109 @@
+SQL> ALTER SESSION SET CONTAINER = FREEPDB1;
+
+Session altered.
+
+SQL> 
+SQL> -- Recomeço limpo, caso o script seja executado de novo (erros aqui são ignorados)
+SQL> EXEC DBMS_RLS.DROP_POLICY('LAB', 'CLIENTES', 'LGPD_CLIENTES_POR_UF')
+
+PL/SQL procedure successfully completed.
+
+SQL> EXEC DBMS_RLS.DROP_POLICY('LAB', 'PEDIDOS', 'LGPD_PEDIDOS_POR_UF')
+
+PL/SQL procedure successfully completed.
+
+SQL> DROP TABLE seg_admin.acesso_regional PURGE;
+
+Table dropped.
+
+SQL> 
+SQL> WHENEVER SQLERROR EXIT FAILURE
+SQL> -- Quem atende qual UF (mudar de região = mudar uma linha, sem tocar em código)
+SQL> CREATE TABLE seg_admin.acesso_regional (
+  2    usuario VARCHAR2(128) CONSTRAINT pk_acesso_regional PRIMARY KEY,
+  3    uf      CHAR(2) NOT NULL
+  4  );
+
+Table created.
+
+SQL> INSERT INTO seg_admin.acesso_regional VALUES ('ATEND_MG', 'MG');
+
+1 row created.
+
+SQL> INSERT INTO seg_admin.acesso_regional VALUES ('ATEND_SP', 'SP');
+
+1 row created.
+
+SQL> COMMIT;
+
+Commit complete.
+
+SQL> 
+SQL> -- A função consulta quem tem o papel ATENDIMENTO (privilégio direto, não via papel)
+SQL> GRANT SELECT ON sys.dba_role_privs TO seg_admin;
+
+Grant succeeded.
+
+SQL> -- O predicado de PEDIDOS consulta CLIENTES: o dono da função precisa poder ler a tabela
+SQL> GRANT SELECT ON lab.clientes TO seg_admin;
+
+Grant succeeded.
+
+SQL> 
+SQL> -- Função que monta o filtro. Atendente sem região cadastrada não vê nada.
+SQL> CREATE OR REPLACE FUNCTION seg_admin.filtro_por_uf (p_esquema VARCHAR2, p_objeto VARCHAR2)
+  2    RETURN VARCHAR2
+  3  AS
+  4    v_atendente NUMBER;
+  5    v_uf	   seg_admin.acesso_regional.uf%TYPE;
+  6  BEGIN
+  7    SELECT COUNT(*) INTO v_atendente FROM sys.dba_role_privs
+  8  	WHERE grantee = SYS_CONTEXT('USERENV', 'SESSION_USER') AND granted_role = 'ATENDIMENTO'
+  9  	  AND admin_option = 'NO';   -- quem criou o papel (SYS) também o recebe, com ADMIN OPTION
+ 10    IF v_atendente = 0 THEN
+ 11  	 RETURN NULL;
+ 12    END IF;
+ 13    SELECT uf INTO v_uf FROM seg_admin.acesso_regional
+ 14  	WHERE usuario = SYS_CONTEXT('USERENV', 'SESSION_USER');
+ 15    IF p_objeto = 'CLIENTES' THEN
+ 16  	 RETURN 'uf = ''' || v_uf || '''';
+ 17    ELSE
+ 18  	 RETURN 'cliente_id IN (SELECT cliente_id FROM lab.clientes WHERE uf = ''' || v_uf || ''')';
+ 19    END IF;
+ 20  EXCEPTION
+ 21    WHEN NO_DATA_FOUND THEN RETURN '1 = 0';
+ 22  END;
+ 23  /
+
+Function created.
+
+SQL> SHOW ERRORS FUNCTION seg_admin.filtro_por_uf
+No errors.
+SQL> 
+SQL> BEGIN
+  2    DBMS_RLS.ADD_POLICY(
+  3  	 object_schema	 => 'LAB',  object_name => 'CLIENTES',	policy_name => 'LGPD_CLIENTES_POR_UF',
+  4  	 function_schema => 'SEG_ADMIN', policy_function => 'FILTRO_POR_UF',
+  5  	 statement_types => 'SELECT, UPDATE, DELETE', update_check => TRUE);
+  6    DBMS_RLS.ADD_POLICY(
+  7  	 object_schema	 => 'LAB',  object_name => 'PEDIDOS',	policy_name => 'LGPD_PEDIDOS_POR_UF',
+  8  	 function_schema => 'SEG_ADMIN', policy_function => 'FILTRO_POR_UF',
+  9  	 statement_types => 'SELECT, UPDATE, DELETE');
+ 10  END;
+ 11  /
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> COLUMN object_name FORMAT A10
+SQL> COLUMN policy_name FORMAT A22
+SQL> COLUMN function FORMAT A15
+SQL> SELECT object_name, policy_name, function, sel, upd, del, enable FROM dba_policies
+  2   WHERE object_owner = 'LAB' ORDER BY 1;
+
+OBJECT_NAM POLICY_NAME            FUNCTION        SEL UPD DEL ENA
+---------- ---------------------- --------------- --- --- --- ---
+CLIENTES   LGPD_CLIENTES_POR_UF   FILTRO_POR_UF   YES YES YES YES
+PEDIDOS    LGPD_PEDIDOS_POR_UF    FILTRO_POR_UF   YES YES YES YES
+
+SQL> SPOOL OFF

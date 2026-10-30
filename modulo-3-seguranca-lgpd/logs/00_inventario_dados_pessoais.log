@@ -1,0 +1,81 @@
+SQL> ALTER SESSION SET CONTAINER = FREEPDB1;
+
+Session altered.
+
+SQL> 
+SQL> -- Recursos de segurança disponíveis nesta edição
+SQL> COLUMN parameter FORMAT A45
+SQL> SELECT parameter, value FROM v$option
+  2   WHERE parameter IN ('Data Redaction', 'Fine-grained access control', 'Unified Auditing',
+  3  			  'Transparent Data Encryption', 'Oracle Label Security', 'Real Application Security')
+  4   ORDER BY 1;
+
+PARAMETER                                     VALUE
+--------------------------------------------- ----------------------------------------------------------------
+Data Redaction                                TRUE
+Fine-grained access control                   TRUE
+Oracle Label Security                         FALSE
+Real Application Security                     TRUE
+Transparent Data Encryption                   TRUE
+Unified Auditing                              TRUE
+
+6 rows selected.
+
+SQL> 
+SQL> -- Classificação de cada coluna com dado pessoal (art. 5º da LGPD)
+SQL> ALTER TABLE lab.clientes MODIFY (
+  2    nome  ANNOTATIONS (ADD dado_pessoal 'identificacao', finalidade 'atendimento e entrega', base_legal 'execucao de contrato'),
+  3    cpf   ANNOTATIONS (ADD dado_pessoal 'identificador unico', finalidade 'emissao de nota fiscal', base_legal 'obrigacao legal', mascarar 'sim'),
+  4    email ANNOTATIONS (ADD dado_pessoal 'contato', finalidade 'avisos do pedido', base_legal 'execucao de contrato', mascarar 'sim'),
+  5    uf    ANNOTATIONS (ADD dado_pessoal 'localizacao (agregada)', finalidade 'logistica e analise', base_legal 'legitimo interesse')
+  6  );
+
+Table altered.
+
+SQL> ALTER TABLE lab.clientes ANNOTATIONS (ADD contem_dados_pessoais 'sim', titular 'cliente', retencao '5 anos apos o ultimo pedido');
+
+Table altered.
+
+SQL> 
+SQL> -- Inventário consultável por qualquer ferramenta (relatório do encarregado/DPO)
+SQL> COLUMN object_name      FORMAT A12
+SQL> COLUMN column_name      FORMAT A8
+SQL> COLUMN annotation_name  FORMAT A22
+SQL> COLUMN annotation_value FORMAT A30
+SQL> SELECT object_name, column_name, annotation_name, annotation_value
+  2    FROM dba_annotations_usage
+  3   WHERE object_name = 'CLIENTES'
+  4   ORDER BY column_name NULLS FIRST, annotation_name;
+
+OBJECT_NAME  COLUMN_N ANNOTATION_NAME        ANNOTATION_VALUE
+------------ -------- ---------------------- ------------------------------
+CLIENTES              CONTEM_DADOS_PESSOAIS  sim
+CLIENTES              RETENCAO               5 anos apos o ultimo pedido
+CLIENTES              TITULAR                cliente
+CLIENTES     CPF      BASE_LEGAL             obrigacao legal
+CLIENTES     CPF      DADO_PESSOAL           identificador unico
+CLIENTES     CPF      FINALIDADE             emissao de nota fiscal
+CLIENTES     CPF      MASCARAR               sim
+CLIENTES     EMAIL    BASE_LEGAL             execucao de contrato
+CLIENTES     EMAIL    DADO_PESSOAL           contato
+CLIENTES     EMAIL    FINALIDADE             avisos do pedido
+CLIENTES     EMAIL    MASCARAR               sim
+CLIENTES     NOME     BASE_LEGAL             execucao de contrato
+CLIENTES     NOME     DADO_PESSOAL           identificacao
+CLIENTES     NOME     FINALIDADE             atendimento e entrega
+CLIENTES     UF       BASE_LEGAL             legitimo interesse
+CLIENTES     UF       DADO_PESSOAL           localizacao (agregada)
+CLIENTES     UF       FINALIDADE             logistica e analise
+
+17 rows selected.
+
+SQL> 
+SQL> -- Volume de titulares
+SQL> SELECT COUNT(*) AS titulares, COUNT(DISTINCT uf) AS ufs FROM lab.clientes;
+
+ TITULARES        UFS
+---------- ----------
+    200000          9
+
+SQL> 
+SQL> SPOOL OFF

@@ -6,7 +6,7 @@
 |---|---|---|
 | [1. Tuning de desempenho](#módulo-1-tuning-de-desempenho) | Planos de execução, índices, reescrita de SQL e particionamento online | ✅ Concluído |
 | [2. Backup e recuperação](#módulo-2-backup-e-recuperação) | ARCHIVELOG, RMAN, Flashback e três desastres simulados com tempo de recuperação medido | ✅ Concluído |
-| 3. Segurança e LGPD | Perfis de acesso, segurança por linha, mascaramento de dados pessoais, auditoria | Em breve |
+| [3. Segurança e LGPD](#módulo-3-segurança-e-lgpd) | Inventário de dados pessoais, menor privilégio, mascaramento, segurança por linha, auditoria e direito à eliminação | ✅ Concluído |
 | 4. Migração para a nuvem | Migração para o Oracle Autonomous Database (OCI) | Em breve |
 
 ---
@@ -139,6 +139,55 @@ Todas as saídas estão em [`modulo-2-backup/logs`](modulo-2-backup/logs), e o r
 
 ---
 
+## Módulo 3: segurança e LGPD
+
+**Cenário:** a tabela `CLIENTES` guarda nome, CPF e e-mail de **200 mil titulares**. Cinco perfis de pessoas usam o banco, e cada um deve ver só o necessário para o seu trabalho (princípio da necessidade, art. 6º, III da LGPD). Tudo foi feito com recursos do próprio Oracle, **sem mudar uma linha da aplicação**.
+
+![O que cada usuário recebe do Oracle](docs/lgpd_quem_ve_o_que.png)
+
+| Exigência da LGPD | Como foi atendida no banco | Script |
+|---|---|---|
+| Saber onde estão os dados pessoais | Cada coluna classificada no dicionário do banco (finalidade, base legal, retenção) com **annotations**, recurso novo do 23ai/26ai, consultável por qualquer ferramenta | [00](modulo-3-seguranca-lgpd/00_inventario_dados_pessoais.sql) |
+| Acesso só ao necessário | Papéis por função (aplicação, atendimento, BI, encarregado), privilégio por coluna (o atendimento só altera o e-mail), esquema de segurança sem senha e política de senhas (bloqueio após 5 erros) | [01](modulo-3-seguranca-lgpd/01_perfis_e_usuarios.sql) |
+| Prestação de contas | **Auditoria unificada**: leitura e alteração de dados pessoais, mudanças de usuários, privilégios e políticas, e logins com falha | [02](modulo-3-seguranca-lgpd/02_auditoria.sql) |
+| Minimizar a exposição | **Data Redaction**: CPF `100******37` e e-mail `xxxx@exemplo.com` para quem não tem o papel de dados completos; o dado continua íntegro na tabela | [03](modulo-3-seguranca-lgpd/03_mascaramento_redaction.sql) |
+| Acesso só aos titulares necessários | **VPD (segurança por linha)**: cada atendente só enxerga clientes, e pedidos, da sua UF, em qualquer ferramenta | [04](modulo-3-seguranca-lgpd/04_seguranca_por_linha_vpd.sql) |
+| Direito à eliminação (art. 18) | Cliente anonimizado com protocolo registrado; os pedidos ficam, por obrigação fiscal (art. 16) | [06](modulo-3-seguranca-lgpd/06_anonimizacao.sql) |
+
+**Resultados dos testes** ([05](modulo-3-seguranca-lgpd/logs/05_testes_de_acesso.log) e [07](modulo-3-seguranca-lgpd/logs/07_relatorio_auditoria.log)):
+
+- **Atendente de MG:** 20.082 clientes e 507.892 pedidos visíveis, de 200 mil e 5 milhões. Consegue localizar um cliente pelo CPF informado ao telefone, mas recebe o CPF mascarado. Tentar alterar e-mails de SP: **0 linhas**. Tentar alterar um nome: negado (`ORA-41900`).
+- **Analista de BI:** faz o faturamento por UF por uma visão sem dados pessoais; a tabela de clientes nem aparece para ele (`ORA-00942`).
+- **Encarregado (DPO):** lê a trilha de auditoria, mas não os dados.
+- **Ataque de senha:** 5 senhas erradas bloqueiam a conta, e nem a senha certa entra depois (`ORA-28000`).
+- **Auditoria:** registrou cada consulta a clientes com usuário, horário e comando exato, inclusive as negadas. As senhas aparecem como `IDENTIFIED BY *`.
+- **Eliminação:** o cliente 4242 virou "Titular anonimizado", e os seus 28 pedidos (R$ 17.196,79) continuaram nas análises.
+
+**Destaques (o que os testes pegaram):**
+
+- **O filtro por linha não filtrava nada na primeira versão:** o atendente de MG via os 200 mil clientes e conseguia alterar e-mails de SP. A função perguntava se a sessão tinha o papel `ATENDIMENTO`, mas **dentro de uma função com os direitos do dono os papéis ficam desativados**: a resposta era sempre "não". A correção confere o papel no dicionário de dados ([log da falha](modulo-3-seguranca-lgpd/logs/05_primeira_execucao_vpd_falhou.log)).
+- **O filtro de pedidos dava `ORA-28113`**, mas a mesma condição rodava normalmente quando digitada à mão. Desligando uma política de cada vez, o problema foi isolado: o predicado gerado é validado com os **privilégios do dono da função**, que não podia ler `CLIENTES`. Um `GRANT` resolveu.
+- **Nem o DBA escapa da auditoria:** quando o mascaramento foi desligado por alguns segundos para investigar o erro acima, isso ficou registrado (`DBMS_REDACT.DISABLE_POLICY`, com horário e usuário).
+- **Senha vazando no log:** na primeira execução, um erro no `CREATE USER` fez o SQL*Plus reimprimir o comando com a senha em texto claro. Os usuários passaram a ser criados num bloco PL/SQL, que não reimprime o comando.
+- **Anonimizar não apaga o passado:** 30 segundos depois, o Flashback Query ainda devolvia o nome, o CPF e o e-mail originais. O dado antigo continua no UNDO e nos backups até sair da retenção (7 dias, no módulo 2), e isso precisa entrar na resposta ao titular.
+- **Limites conhecidos:** o mascaramento não impede inferência por filtro (quem pode buscar por CPF confirma se um CPF existe), e o SYS é isento das políticas. Por isso a auditoria é a última linha de defesa.
+
+**Como reproduzir** (dentro de `modulo-3-seguranca-lgpd`, na VM, como `oracle`):
+
+```bash
+mkdir -p logs
+sqlplus / as sysdba @00_inventario_dados_pessoais.sql
+sqlplus / as sysdba @01_perfis_e_usuarios.sql        # pede a senha dos usuários de teste
+sqlplus / as sysdba @02_auditoria.sql
+sqlplus / as sysdba @03_mascaramento_redaction.sql
+sqlplus / as sysdba @04_seguranca_por_linha_vpd.sql
+sqlplus /nolog      @05_testes_de_acesso.sql         # a mesma consulta por 5 usuários
+sqlplus / as sysdba @06_anonimizacao.sql
+sqlplus /nolog      @07_relatorio_auditoria.sql      # relatório do encarregado
+```
+
+---
+
 ## Estrutura
 
 ```
@@ -160,12 +209,22 @@ laboratorio-dba-oracle/
 │   ├── 04_validar_backups.sh     # RESTORE VALIDATE e uso da Fast Recovery Area
 │   ├── 05 a 08_cenario_*.sh      # os três desastres e suas recuperações
 │   └── logs/                     # evidências de cada execução
+├── modulo-3-seguranca-lgpd/
+│   ├── 00_inventario_dados_pessoais.sql  # classificação das colunas (annotations)
+│   ├── 01_perfis_e_usuarios.sql          # papéis, privilégios e política de senhas
+│   ├── 02_auditoria.sql                  # auditoria unificada
+│   ├── 03_mascaramento_redaction.sql     # Data Redaction de CPF e e-mail
+│   ├── 04_seguranca_por_linha_vpd.sql    # VPD: cada atendente só vê a sua UF
+│   ├── 05_testes_de_acesso.sql           # a mesma consulta por 5 usuários + ataque de senha
+│   ├── 06_anonimizacao.sql               # direito à eliminação
+│   ├── 07_relatorio_auditoria.sql        # relatório do encarregado (DPO)
+│   └── logs/                             # evidências de cada execução
 └── docs/                         # imagens do README
 ```
 
 ## Tecnologias
 
-Oracle AI Database 26ai Free · Oracle Linux 10 · SQL*Plus · PL/SQL · DBMS_XPLAN · DBMS_STATS · Partitioning · RMAN · Flashback (Query, Table, Database) · Bash · cron · VirtualBox
+Oracle AI Database 26ai Free · Oracle Linux 10 · SQL*Plus · PL/SQL · DBMS_XPLAN · DBMS_STATS · Partitioning · RMAN · Flashback (Query, Table, Database) · Bash · cron · Data Redaction · Virtual Private Database · Unified Auditing · Annotations · VirtualBox
 
 ## Autor
 

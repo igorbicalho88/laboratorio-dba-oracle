@@ -1,0 +1,59 @@
+SQL> ALTER SESSION SET CONTAINER = FREEPDB1;
+
+Session altered.
+
+SQL> 
+SQL> -- 1) Quem leu ou alterou dados pessoais (exceto a aplicação, que geraria volume enorme)
+SQL> CREATE AUDIT POLICY lgpd_acesso_dados_pessoais
+  2    ACTIONS SELECT ON lab.clientes, UPDATE ON lab.clientes, DELETE ON lab.clientes,
+  3  	       SELECT ON lab.vw_clientes_analise;
+  ACTIONS SELECT ON lab.clientes, UPDATE ON lab.clientes, DELETE ON lab.clientes,
+                        *
+ERROR at line 2:
+ORA-46358: Audit policy LGPD_ACESSO_DADOS_PESSOAIS already exists.
+Help: https://docs.oracle.com/error-help/db/ora-46358/
+
+
+SQL> AUDIT POLICY lgpd_acesso_dados_pessoais EXCEPT app_loja, lab;
+
+Audit succeeded.
+
+SQL> 
+SQL> -- 2) Mudanças nas regras de acesso: usuários, papéis, privilégios e políticas de segurança
+SQL> CREATE AUDIT POLICY lgpd_mudancas_seguranca
+  2    ACTIONS CREATE USER, ALTER USER, DROP USER, CREATE ROLE, DROP ROLE, GRANT, REVOKE,
+  3  	       CREATE PROFILE, ALTER PROFILE,
+  4  	       EXECUTE ON sys.dbms_redact, EXECUTE ON sys.dbms_rls;
+          EXECUTE ON sys.dbms_redact, EXECUTE ON sys.dbms_rls
+                         *
+ERROR at line 4:
+ORA-46358: Audit policy LGPD_MUDANCAS_SEGURANCA already exists.
+Help: https://docs.oracle.com/error-help/db/ora-46358/
+
+
+SQL> AUDIT POLICY lgpd_mudancas_seguranca;
+
+Audit succeeded.
+
+SQL> 
+SQL> -- 3) Tentativas de login com falha (política pronta do Oracle)
+SQL> AUDIT POLICY ora_logon_failures WHENEVER NOT SUCCESSFUL;
+
+Audit succeeded.
+
+SQL> 
+SQL> COLUMN policy_name FORMAT A30
+SQL> COLUMN entity_name FORMAT A12
+SQL> SELECT policy_name, enabled_option, entity_name, entity_type, success, failure
+  2    FROM audit_unified_enabled_policies
+  3   WHERE policy_name LIKE 'LGPD%' OR policy_name = 'ORA_LOGON_FAILURES'
+  4   ORDER BY 1;
+
+POLICY_NAME                    ENABLED_OPTION  ENTITY_NAME  ENTITY_ SUC FAI
+------------------------------ --------------- ------------ ------- --- ---
+LGPD_ACESSO_DADOS_PESSOAIS     EXCEPT USER     APP_LOJA     USER    YES YES
+LGPD_ACESSO_DADOS_PESSOAIS     EXCEPT USER     LAB          USER    YES YES
+LGPD_MUDANCAS_SEGURANCA        BY USER         ALL USERS    USER    YES YES
+ORA_LOGON_FAILURES             BY USER         ALL USERS    USER    NO  YES
+
+SQL> SPOOL OFF

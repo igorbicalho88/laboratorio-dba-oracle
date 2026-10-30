@@ -1,0 +1,232 @@
+
+===== 1) Acessos a dados pessoais, por usuário =====
+
+USUARIO      OBJETO                   ACAO                        VEZES    NEGADOS
+------------ ------------------------ ---------------------- ---------- ----------
+ANALISTA_BI  CLIENTES                 SELECT                          6          3
+ANALISTA_BI  VW_CLIENTES_ANALISE      SELECT                          3          0
+ATEND_MG     CLIENTES                 SELECT                         26          7
+ATEND_MG     CLIENTES                 UPDATE                          6          3
+ATEND_SP     CLIENTES                 SELECT                          6          0
+AUDITOR_DPO  CLIENTES                 SELECT                          3          3
+SYS          CLIENTES                 SELECT                          5          0
+SYS          CLIENTES                 UPDATE                          1          0
+
+8 rows selected.
+
+
+===== 2) Comandos exatos contra a tabela de clientes =====
+
+QUANDO            USUARIO      ACAO                         ERRO DETALHE
+----------------- ------------ ---------------------- ---------- ------------------------------------------------------------
+30/10 08:35:22    SYS          SELECT                          0 SELECT cliente_id, cpf, email FROM lab.clientes WHERE client
+30/10 08:37:57    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WH
+30/10 08:37:57    ATEND_MG     SELECT                          0 SELECT uf, COUNT(*) AS clientes_visiveis FROM lab.clientes G
+30/10 08:37:59    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, uf FROM lab.clientes WHERE cpf
+30/10 08:37:59    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, uf FROM lab.clientes WHERE cpf
+30/10 08:38:00    ATEND_MG     UPDATE                          0 UPDATE lab.clientes SET email = 'novo@exemplo.com' WHERE uf
+30/10 08:38:00    ATEND_MG     SELECT                          0 UPDATE lab.clientes SET email = 'novo@exemplo.com' WHERE uf
+30/10 08:38:00    ATEND_MG     UPDATE                       2004 UPDATE lab.clientes SET nome = 'Outro nome' WHERE cliente_id
+30/10 08:38:00    ATEND_MG     SELECT                       2004 UPDATE lab.clientes SET nome = 'Outro nome' WHERE cliente_id
+30/10 08:38:00    ATEND_SP     SELECT                          0 SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WH
+30/10 08:38:00    ATEND_SP     SELECT                          0 SELECT uf, COUNT(*) AS clientes_visiveis FROM lab.clientes G
+30/10 08:38:01    ANALISTA_BI  SELECT                       2004 SELECT cliente_id, nome, cpf FROM lab.clientes WHERE cliente
+30/10 08:38:01    ANALISTA_BI  SELECT                          0 SELECT c.uf, COUNT(*) AS pedidos, ROUND(SUM(p.valor_total))
+30/10 08:38:05    AUDITOR_DPO  SELECT                       2004 SELECT COUNT(*) FROM lab.clientes
+30/10 08:47:10    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WH
+30/10 08:47:10    ATEND_MG     SELECT                          0 SELECT uf, COUNT(*) AS clientes_visiveis FROM lab.clientes G
+30/10 08:47:11    ATEND_MG     SELECT                       2004 SELECT COUNT(*) AS pedidos_visiveis FROM lab.pedidos
+30/10 08:47:11    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, uf FROM lab.clientes WHERE cpf
+30/10 08:47:11    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, uf FROM lab.clientes WHERE cpf
+30/10 08:47:11    ATEND_MG     UPDATE                          0 UPDATE lab.clientes SET email = 'novo@exemplo.com' WHERE uf
+30/10 08:47:11    ATEND_MG     SELECT                          0 UPDATE lab.clientes SET email = 'novo@exemplo.com' WHERE uf
+30/10 08:47:11    ATEND_MG     UPDATE                       2004 UPDATE lab.clientes SET nome = 'Outro nome' WHERE cliente_id
+30/10 08:47:11    ATEND_MG     SELECT                       2004 UPDATE lab.clientes SET nome = 'Outro nome' WHERE cliente_id
+30/10 08:47:11    ATEND_SP     SELECT                          0 SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WH
+30/10 08:47:11    ATEND_SP     SELECT                          0 SELECT uf, COUNT(*) AS clientes_visiveis FROM lab.clientes G
+30/10 08:47:11    ANALISTA_BI  SELECT                       2004 SELECT cliente_id, nome, cpf FROM lab.clientes WHERE cliente
+30/10 08:47:11    ANALISTA_BI  SELECT                          0 SELECT c.uf, COUNT(*) AS pedidos, ROUND(SUM(p.valor_total))
+30/10 08:47:14    AUDITOR_DPO  SELECT                       2004 SELECT COUNT(*) FROM lab.clientes
+30/10 08:51:11    ATEND_MG     SELECT                          0 SELECT COUNT(*) FROM lab.clientes WHERE uf = 'MG'
+30/10 08:51:11    ATEND_MG     SELECT                       2004 SELECT COUNT(*) FROM lab.pedidos WHERE ROWNUM <= 10
+30/10 08:53:15    ATEND_MG     SELECT                       2004 SELECT COUNT(*) FROM lab.pedidos
+30/10 08:53:16    ATEND_MG     SELECT                       2004 SELECT COUNT(*) FROM lab.pedidos
+30/10 08:55:43    ATEND_MG     SELECT                          0 SELECT COUNT(*) FROM lab.pedidos WHERE cliente_id IN (SELECT
+30/10 08:58:02    ATEND_MG     SELECT                          0 SELECT COUNT(*) FROM lab.pedidos
+30/10 09:02:03    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WH
+30/10 09:02:03    ATEND_MG     SELECT                          0 SELECT uf, COUNT(*) AS clientes_visiveis FROM lab.clientes G
+30/10 09:02:03    ATEND_MG     SELECT                          0 SELECT COUNT(*) AS pedidos_visiveis FROM lab.pedidos
+30/10 09:02:04    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, uf FROM lab.clientes WHERE cpf
+30/10 09:02:04    ATEND_MG     SELECT                          0 SELECT cliente_id, nome, cpf, uf FROM lab.clientes WHERE cpf
+30/10 09:02:04    ATEND_MG     UPDATE                          0 UPDATE lab.clientes SET email = 'novo@exemplo.com' WHERE uf
+30/10 09:02:04    ATEND_MG     SELECT                          0 UPDATE lab.clientes SET email = 'novo@exemplo.com' WHERE uf
+30/10 09:02:04    ATEND_MG     UPDATE                       2004 UPDATE lab.clientes SET nome = 'Outro nome' WHERE cliente_id
+30/10 09:02:04    ATEND_MG     SELECT                       2004 UPDATE lab.clientes SET nome = 'Outro nome' WHERE cliente_id
+30/10 09:02:04    ATEND_SP     SELECT                          0 SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WH
+30/10 09:02:04    ATEND_SP     SELECT                          0 SELECT uf, COUNT(*) AS clientes_visiveis FROM lab.clientes G
+30/10 09:02:04    ANALISTA_BI  SELECT                       2004 SELECT cliente_id, nome, cpf FROM lab.clientes WHERE cliente
+30/10 09:02:05    ANALISTA_BI  SELECT                          0 SELECT c.uf, COUNT(*) AS pedidos, ROUND(SUM(p.valor_total))
+30/10 09:02:07    AUDITOR_DPO  SELECT                       2004 SELECT COUNT(*) FROM lab.clientes
+30/10 09:02:39    SYS          SELECT                          0 SELECT cliente_id, nome, cpf, email, uf, data_cadastro FROM
+30/10 09:02:39    SYS          UPDATE                          0 UPDATE LAB.CLIENTES SET NOME = 'Titular anonimizado', CPF =
+30/10 09:02:39    SYS          SELECT                          0 UPDATE LAB.CLIENTES SET NOME = 'Titular anonimizado', CPF =
+30/10 09:02:39    SYS          SELECT                          0 SELECT cliente_id, nome, cpf, email, uf, data_cadastro FROM
+30/10 09:02:39    SYS          SELECT                          0 SELECT cliente_id, nome, cpf, email FROM lab.clientes
+                                                                   AS O
+
+
+53 rows selected.
+
+
+===== 3) Mudanças nas regras de acesso (usuários, privilégios, políticas) =====
+
+QUANDO            USUARIO      ACAO                   OBJETO                   DETALHE
+----------------- ------------ ---------------------- ------------------------ ------------------------------------------------------------
+30/10 08:33:00    SYS          DROP USER              APP_LOJA                 DROP USER app_loja
+30/10 08:33:00    SYS          DROP USER              ATEND_MG                 DROP USER atend_mg
+30/10 08:33:01    SYS          DROP USER              ATEND_SP                 DROP USER atend_sp
+30/10 08:33:01    SYS          DROP USER              ANALISTA_BI              DROP USER analista_bi
+30/10 08:33:01    SYS          DROP USER              AUDITOR_DPO              DROP USER auditor_dpo
+30/10 08:33:01    SYS          DROP USER              SEG_ADMIN                DROP USER seg_admin CASCADE
+30/10 08:33:01    SYS          DROP ROLE              LGPD_DADOS_COMPLETOS     DROP ROLE lgpd_dados_completos
+30/10 08:33:01    SYS          DROP ROLE              APP_LOJA_ROLE            DROP ROLE app_loja_role
+30/10 08:33:01    SYS          DROP ROLE              ATENDIMENTO              DROP ROLE atendimento
+30/10 08:33:01    SYS          DROP ROLE              ANALISTA                 DROP ROLE analista
+30/10 08:33:01    SYS          CREATE PROFILE         PERFIL_LGPD              CREATE PROFILE perfil_lgpd LIMIT
+                                                                                 FAILED_LOGIN_ATTEMPTS
+
+30/10 08:33:01    SYS          CREATE USER            SEG_ADMIN                CREATE USER seg_admin NO AUTHENTICATION DEFAULT TABLESPACE l
+30/10 08:33:01    SYS          CREATE ROLE            LGPD_DADOS_COMPLETOS     CREATE ROLE lgpd_dados_completos
+30/10 08:33:01    SYS          CREATE ROLE            APP_LOJA_ROLE            CREATE ROLE app_loja_role
+30/10 08:33:01    SYS          CREATE ROLE            ATENDIMENTO              CREATE ROLE atendimento
+30/10 08:33:01    SYS          CREATE ROLE            ANALISTA                 CREATE ROLE analista
+30/10 08:33:01    SYS          GRANT                  CLIENTES                 GRANT SELECT, INSERT, UPDATE ON lab.clientes     TO app_loja
+30/10 08:33:01    SYS          GRANT                  PEDIDOS                  GRANT SELECT, INSERT, UPDATE ON lab.pedidos      TO app_loja
+30/10 08:33:01    SYS          GRANT                  ITENS_PEDIDO             GRANT SELECT, INSERT, UPDATE ON lab.itens_pedido TO app_loja
+30/10 08:33:01    SYS          GRANT                  PRODUTOS                 GRANT SELECT                 ON lab.produtos     TO app_loja
+30/10 08:33:01    SYS          GRANT                  CLIENTES                 GRANT SELECT ON lab.clientes TO atendimento
+30/10 08:33:01    SYS          GRANT                  CLIENTES                 GRANT UPDATE (email) ON lab.clientes TO atendimento
+30/10 08:33:01    SYS          GRANT                  PEDIDOS                  GRANT SELECT ON lab.pedidos      TO atendimento
+30/10 08:33:01    SYS          GRANT                  ITENS_PEDIDO             GRANT SELECT ON lab.itens_pedido TO atendimento
+30/10 08:33:01    SYS          GRANT                  PRODUTOS                 GRANT SELECT ON lab.produtos     TO atendimento
+30/10 08:33:02    SYS          GRANT                  VW_CLIENTES_ANALISE      GRANT SELECT ON lab.vw_clientes_analise TO analista
+30/10 08:33:02    SYS          GRANT                  PEDIDOS                  GRANT SELECT ON lab.pedidos      TO analista
+30/10 08:33:02    SYS          GRANT                  ITENS_PEDIDO             GRANT SELECT ON lab.itens_pedido TO analista
+30/10 08:33:02    SYS          GRANT                  PRODUTOS                 GRANT SELECT ON lab.produtos     TO analista
+30/10 08:33:02    SYS          GRANT                  LAB                      GRANT lgpd_dados_completos TO lab
+30/10 08:33:16    SYS          CREATE USER            APP_LOJA                 CREATE USER APP_LOJA IDENTIFIED BY * PROFILE perfil_lgpd
+30/10 08:33:16    SYS          CREATE USER            ATEND_MG                 CREATE USER ATEND_MG IDENTIFIED BY * PROFILE perfil_lgpd
+30/10 08:33:16    SYS          CREATE USER            ATEND_SP                 CREATE USER ATEND_SP IDENTIFIED BY * PROFILE perfil_lgpd
+30/10 08:33:17    SYS          CREATE USER            ANALISTA_BI              CREATE USER ANALISTA_BI IDENTIFIED BY * PROFILE perfil_lgpd
+30/10 08:33:17    SYS          CREATE USER            AUDITOR_DPO              CREATE USER AUDITOR_DPO IDENTIFIED BY * PROFILE perfil_lgpd
+30/10 08:33:17    SYS          GRANT                  APP_LOJA                 GRANT CREATE SESSION TO app_loja, atend_mg, atend_sp, analis
+30/10 08:33:17    SYS          GRANT                  ATEND_MG                 GRANT CREATE SESSION TO app_loja, atend_mg, atend_sp, analis
+30/10 08:33:17    SYS          GRANT                  ATEND_SP                 GRANT CREATE SESSION TO app_loja, atend_mg, atend_sp, analis
+30/10 08:33:17    SYS          GRANT                  ANALISTA_BI              GRANT CREATE SESSION TO app_loja, atend_mg, atend_sp, analis
+30/10 08:33:17    SYS          GRANT                  AUDITOR_DPO              GRANT CREATE SESSION TO app_loja, atend_mg, atend_sp, analis
+30/10 08:33:17    SYS          GRANT                  APP_LOJA                 GRANT app_loja_role, lgpd_dados_completos TO app_loja
+30/10 08:33:17    SYS          GRANT                  APP_LOJA                 GRANT app_loja_role, lgpd_dados_completos TO app_loja
+30/10 08:33:17    SYS          GRANT                  ATEND_MG                 GRANT atendimento TO atend_mg, atend_sp
+30/10 08:33:17    SYS          GRANT                  ATEND_SP                 GRANT atendimento TO atend_mg, atend_sp
+30/10 08:33:17    SYS          GRANT                  ANALISTA_BI              GRANT analista    TO analista_bi
+30/10 08:33:17    SYS          GRANT                  AUDITOR_DPO              GRANT audit_viewer TO auditor_dpo
+30/10 08:35:21    SYS          EXECUTE                DBMS_REDACT              BEGIN
+                                                                                 -- CPF: mostra s?? os 3 primeiros e os 2 ??ltimos d?
+
+30/10 08:36:15    SYS          EXECUTE                DBMS_RLS                 BEGIN
+                                                                                 DBMS_RLS.ADD_POLICY(
+                                                                                   object_schema   => 'LAB',
+
+30/10 08:38:12    SYS          ALTER USER             ATEND_SP                 ALTER USER atend_sp ACCOUNT UNLOCK
+30/10 08:45:52    SYS          EXECUTE                DBMS_RLS                 BEGIN DBMS_RLS.DROP_POLICY('LAB', 'CLIENTES', 'LGPD_CLIENTES
+30/10 08:45:52    SYS          EXECUTE                DBMS_RLS                 BEGIN DBMS_RLS.DROP_POLICY('LAB', 'PEDIDOS', 'LGPD_PEDIDOS_P
+30/10 08:45:53    SYS          GRANT                  DBA_ROLE_PRIVS           GRANT SELECT ON sys.dba_role_privs TO seg_admin
+30/10 08:45:53    SYS          EXECUTE                DBMS_RLS                 BEGIN
+                                                                                 DBMS_RLS.ADD_POLICY(
+                                                                                   object_schema   => 'LAB',
+
+30/10 08:47:20    SYS          ALTER USER             ATEND_SP                 ALTER USER atend_sp ACCOUNT UNLOCK
+30/10 08:53:15    SYS          EXECUTE                DBMS_REDACT              BEGIN DBMS_REDACT.DISABLE_POLICY('LAB','CLIENTES','LGPD_MASC
+30/10 08:53:16    SYS          EXECUTE                DBMS_REDACT              BEGIN DBMS_REDACT.ENABLE_POLICY('LAB','CLIENTES','LGPD_MASCA
+30/10 08:53:16    SYS          EXECUTE                DBMS_RLS                 BEGIN DBMS_RLS.ENABLE_POLICY('LAB','CLIENTES','LGPD_CLIENTES
+30/10 08:53:16    SYS          EXECUTE                DBMS_RLS                 BEGIN DBMS_RLS.ENABLE_POLICY('LAB','CLIENTES','LGPD_CLIENTES
+30/10 08:55:43    SYS          EXECUTE                DBMS_RLS                 BEGIN DBMS_RLS.ENABLE_POLICY('LAB','PEDIDOS','LGPD_PEDIDOS_P
+30/10 08:55:48    SYS          EXECUTE                DBMS_RLS                 BEGIN DBMS_RLS.ENABLE_POLICY('LAB','PEDIDOS','LGPD_PEDIDOS_P
+30/10 08:58:02    SYS          GRANT                  CLIENTES                 GRANT SELECT ON lab.clientes TO seg_admin
+30/10 09:01:40    SYS          EXECUTE                DBMS_RLS                 BEGIN DBMS_RLS.DROP_POLICY('LAB', 'CLIENTES', 'LGPD_CLIENTES
+30/10 09:01:41    SYS          EXECUTE                DBMS_RLS                 BEGIN DBMS_RLS.DROP_POLICY('LAB', 'PEDIDOS', 'LGPD_PEDIDOS_P
+30/10 09:01:42    SYS          GRANT                  DBA_ROLE_PRIVS           GRANT SELECT ON sys.dba_role_privs TO seg_admin
+30/10 09:01:42    SYS          GRANT                  CLIENTES                 GRANT SELECT ON lab.clientes TO seg_admin
+30/10 09:01:42    SYS          EXECUTE                DBMS_RLS                 BEGIN
+                                                                                 DBMS_RLS.ADD_POLICY(
+                                                                                   object_schema   => 'LAB',
+
+30/10 09:02:13    SYS          ALTER USER             ATEND_SP                 ALTER USER atend_sp ACCOUNT UNLOCK
+30/10 09:02:39    SYS          GRANT                  CLIENTES                 GRANT SELECT, UPDATE ON lab.clientes TO seg_admin
+
+68 rows selected.
+
+
+===== 4) Logins com falha =====
+
+QUANDO            USUARIO            ERRO OS_USERNAME
+----------------- ------------ ---------- --------------------------------------------------------------------------------------------------------------------------------
+USERHOST
+--------------------------------------------------------------------------------------------------------------------------------
+30/10 08:38:07    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:38:09    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:38:10    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:38:11    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:38:12    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:38:12    ATEND_SP          28000 oracle
+oraclelab.localdomain
+
+30/10 08:47:15    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:47:16    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:47:17    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:47:18    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:47:19    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 08:47:20    ATEND_SP          28000 oracle
+oraclelab.localdomain
+
+30/10 09:02:08    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 09:02:09    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 09:02:10    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 09:02:12    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 09:02:13    ATEND_SP           1017 oracle
+oraclelab.localdomain
+
+30/10 09:02:13    ATEND_SP          28000 oracle
+oraclelab.localdomain
+
+
+18 rows selected.
+

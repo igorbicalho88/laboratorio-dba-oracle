@@ -1,0 +1,73 @@
+SQL> ALTER SESSION SET CONTAINER = FREEPDB1;
+
+Session altered.
+
+SQL> 
+SQL> BEGIN
+  2    -- CPF: mostra só os 3 primeiros e os 2 últimos dígitos (10000000037 -> 100******37)
+  3    DBMS_REDACT.ADD_POLICY(
+  4  	 object_schema		=> 'LAB',
+  5  	 object_name		=> 'CLIENTES',
+  6  	 policy_name		=> 'LGPD_MASCARA_CLIENTES',
+  7  	 policy_description	=> 'Mascara CPF e e-mail para quem nao tem o papel LGPD_DADOS_COMPLETOS',
+  8  	 column_name		=> 'CPF',
+  9  	 function_type		=> DBMS_REDACT.REGEXP,
+ 10  	 regexp_pattern 	=> '^(\d{3})\d{6}(\d{2})$',
+ 11  	 regexp_replace_string	=> '\1******\2',
+ 12  	 regexp_position	=> 1,
+ 13  	 regexp_occurrence	=> 0,
+ 14  	 expression		=> 'SYS_CONTEXT(''SYS_SESSION_ROLES'', ''LGPD_DADOS_COMPLETOS'') = ''FALSE''');
+ 15  
+ 16    -- E-mail: esconde o nome antes do @ (cliente42@exemplo.com -> xxxx@exemplo.com)
+ 17    DBMS_REDACT.ALTER_POLICY(
+ 18  	 object_schema		=> 'LAB',
+ 19  	 object_name		=> 'CLIENTES',
+ 20  	 policy_name		=> 'LGPD_MASCARA_CLIENTES',
+ 21  	 action 		=> DBMS_REDACT.ADD_COLUMN,
+ 22  	 column_name		=> 'EMAIL',
+ 23  	 function_type		=> DBMS_REDACT.REGEXP,
+ 24  	 regexp_pattern 	=> DBMS_REDACT.RE_PATTERN_EMAIL_ADDRESS,
+ 25  	 regexp_replace_string	=> DBMS_REDACT.RE_REDACT_EMAIL_NAME,
+ 26  	 regexp_position	=> DBMS_REDACT.RE_BEGINNING,
+ 27  	 regexp_occurrence	=> DBMS_REDACT.RE_ALL);
+ 28  END;
+ 29  /
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> COLUMN object_name FORMAT A10
+SQL> COLUMN column_name FORMAT A8
+SQL> COLUMN function_type FORMAT A20
+SQL> COLUMN regexp_pattern FORMAT A45
+SQL> SELECT object_name, column_name, function_type, regexp_pattern FROM redaction_columns ORDER BY 2;
+
+OBJECT_NAM COLUMN_N FUNCTION_TYPE        REGEXP_PATTERN
+---------- -------- -------------------- ---------------------------------------------
+CLIENTES   CPF      REGEXP REDACTION     ^(\d{3})\d{6}(\d{2})$
+CLIENTES   EMAIL    REGEXP REDACTION     ([A-Za-z0-9._%+-]+)@([A-Za-z0-9.-]+\.[A-Za-z]
+                                         {2,4})
+
+
+SQL> COLUMN expression FORMAT A75
+SQL> SELECT policy_name, expression, enable FROM redaction_policies;
+
+POLICY_NAME
+--------------------------------------------------------------------------------------------------------------------------------
+EXPRESSION                                                                  ENA
+--------------------------------------------------------------------------- ---
+LGPD_MASCARA_CLIENTES
+SYS_CONTEXT('SYS_SESSION_ROLES', 'LGPD_DADOS_COMPLETOS') = 'FALSE'          YES
+
+
+SQL> 
+SQL> -- SYS é isento de mascaramento: aqui ainda aparece o dado real
+SQL> SELECT cliente_id, cpf, email FROM lab.clientes WHERE cliente_id <= 3 ORDER BY 1;
+
+CLIENTE_ID CPF         EMAIL
+---------- ----------- --------------------------------------------------------------------------------
+         1 10000000037 cliente1@exemplo.com
+         2 10000000074 cliente2@exemplo.com
+         3 10000000111 cliente3@exemplo.com
+
+SQL> SPOOL OFF

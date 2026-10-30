@@ -1,0 +1,208 @@
+
+================================================================
+1) APP_LOJA (aplicacao): ve todos os clientes, com dados completos
+================================================================
+Connected.
+SQL> SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WHERE cliente_id <= 5 ORDER BY 1;
+
+CLIENTE_ID NOME           CPF          EMAIL                    UF
+---------- -------------- ------------ ------------------------ --
+         1 Cliente 1      10000000037  cliente1@exemplo.com     GO
+         2 Cliente 2      10000000074  cliente2@exemplo.com     PE
+         3 Cliente 3      10000000111  cliente3@exemplo.com     SP
+         4 Cliente 4      10000000148  cliente4@exemplo.com     RJ
+         5 Cliente 5      10000000185  cliente5@exemplo.com     SP
+
+SQL> SELECT COUNT(*) AS clientes_visiveis FROM lab.clientes;
+
+CLIENTES_VISIVEIS
+-----------------
+           200000
+
+SQL> SET ECHO OFF
+
+================================================================
+2) ATEND_MG (atendimento MG): so clientes de MG, CPF e e-mail mascarados
+================================================================
+Connected.
+SQL> SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WHERE cliente_id <= 30 ORDER BY 1;
+
+CLIENTE_ID NOME           CPF          EMAIL                    UF
+---------- -------------- ------------ ------------------------ --
+         8 Cliente 8      100******96  xxxx@exemplo.com         MG
+        21 Cliente 21     100******77  xxxx@exemplo.com         MG
+        27 Cliente 27     100******99  xxxx@exemplo.com         MG
+
+SQL> SELECT uf, COUNT(*) AS clientes_visiveis FROM lab.clientes GROUP BY uf;
+
+UF CLIENTES_VISIVEIS
+-- -----------------
+MG             20082
+
+SQL> SELECT COUNT(*) AS pedidos_visiveis FROM lab.pedidos;
+
+PEDIDOS_VISIVEIS
+----------------
+          507892
+
+SQL> -- O atendente localiza o cliente pelo CPF informado ao telefone, mas não o vê inteiro
+SQL> SELECT cliente_id, nome, cpf, uf FROM lab.clientes WHERE cpf = (SELECT MIN(cpf) FROM lab.clientes);
+
+CLIENTE_ID NOME           CPF          UF
+---------- -------------- ------------ --
+         8 Cliente 8      100******96  MG
+
+SQL> -- Tentativas fora do permitido
+SQL> UPDATE lab.clientes SET email = 'novo@exemplo.com' WHERE uf = 'SP';
+
+0 rows updated.
+
+SQL> UPDATE lab.clientes SET nome = 'Outro nome' WHERE cliente_id = 1;
+UPDATE lab.clientes SET nome = 'Outro nome' WHERE cliente_id = 1
+           *
+ERROR at line 1:
+ORA-41900: missing UPDATE privilege on "LAB"."CLIENTES"
+Help: https://docs.oracle.com/error-help/db/ora-41900/
+
+
+SQL> ROLLBACK;
+
+Rollback complete.
+
+SQL> SET ECHO OFF
+
+================================================================
+3) ATEND_SP (atendimento SP): mesma consulta, outro resultado
+================================================================
+Connected.
+SQL> SELECT cliente_id, nome, cpf, email, uf FROM lab.clientes WHERE cliente_id <= 30 ORDER BY 1;
+
+CLIENTE_ID NOME           CPF          EMAIL                    UF
+---------- -------------- ------------ ------------------------ --
+         3 Cliente 3      100******11  xxxx@exemplo.com         SP
+         5 Cliente 5      100******85  xxxx@exemplo.com         SP
+        11 Cliente 11     100******07  xxxx@exemplo.com         SP
+        16 Cliente 16     100******92  xxxx@exemplo.com         SP
+        19 Cliente 19     100******03  xxxx@exemplo.com         SP
+        23 Cliente 23     100******51  xxxx@exemplo.com         SP
+        25 Cliente 25     100******25  xxxx@exemplo.com         SP
+
+7 rows selected.
+
+SQL> SELECT uf, COUNT(*) AS clientes_visiveis FROM lab.clientes GROUP BY uf;
+
+UF CLIENTES_VISIVEIS
+-- -----------------
+SP             39752
+
+SQL> SET ECHO OFF
+
+================================================================
+4) ANALISTA_BI: analisa vendas sem acessar dados pessoais
+================================================================
+Connected.
+SQL> SELECT cliente_id, nome, cpf FROM lab.clientes WHERE cliente_id = 1;
+SELECT cliente_id, nome, cpf FROM lab.clientes WHERE cliente_id = 1
+                                      *
+ERROR at line 1:
+ORA-00942: table or view "LAB"."CLIENTES" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+
+
+SQL> SELECT c.uf, COUNT(*) AS pedidos, ROUND(SUM(p.valor_total)) AS faturamento
+  2    FROM lab.pedidos p JOIN lab.vw_clientes_analise c ON c.cliente_id = p.cliente_id
+  3   WHERE p.data_pedido >= DATE '2025-01-01'
+  4   GROUP BY c.uf ORDER BY faturamento DESC;
+
+UF    PEDIDOS FATURAMENTO
+-- ---------- -----------
+SP     301746   154030395
+PE     152840    78078456
+SC     152495    77994220
+MG     152711    77937197
+PR     152376    77749452
+RS     152417    77642869
+RJ     151526    77307935
+GO     150490    76966935
+BA     150767    76934414
+
+9 rows selected.
+
+SQL> SET ECHO OFF
+
+================================================================
+5) AUDITOR_DPO: le a auditoria, mas nao os dados
+================================================================
+Connected.
+SQL> SELECT COUNT(*) FROM lab.clientes;
+SELECT COUNT(*) FROM lab.clientes
+                         *
+ERROR at line 1:
+ORA-00942: table or view "LAB"."CLIENTES" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+
+
+SQL> SELECT COUNT(*) AS registros_de_auditoria FROM unified_audit_trail;
+
+REGISTROS_DE_AUDITORIA
+----------------------
+                 14095
+
+SQL> SET ECHO OFF
+
+================================================================
+6) Ataque de senha: 6 tentativas erradas no usuario ATEND_SP
+(cada erro demora mais: o Oracle atrasa as tentativas seguidas)
+================================================================
+Disconnected from Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free
+Version 23.26.3.0.0
+ERROR:
+ORA-01017: invalid credential or not authorized; logon denied
+Help: https://docs.oracle.com/error-help/db/ora-01017/
+
+
+ERROR:
+ORA-01017: invalid credential or not authorized; logon denied
+Help: https://docs.oracle.com/error-help/db/ora-01017/
+
+
+ERROR:
+ORA-01017: invalid credential or not authorized; logon denied
+Help: https://docs.oracle.com/error-help/db/ora-01017/
+
+
+ERROR:
+ORA-01017: invalid credential or not authorized; logon denied
+Help: https://docs.oracle.com/error-help/db/ora-01017/
+
+
+ERROR:
+ORA-01017: invalid credential or not authorized; logon denied
+Help: https://docs.oracle.com/error-help/db/ora-01017/
+
+
+>>> 6a tentativa, agora com a senha CERTA:
+ERROR:
+ORA-28000: The account is locked; login denied.
+Help: https://docs.oracle.com/error-help/db/ora-28000/
+
+
+
+>>> O DBA confere e desbloqueia a conta
+Connected.
+
+Session altered.
+
+
+USERNAME                                                                                                                         ACCOUNT_STATUS                   LOCK_DATE
+-------------------------------------------------------------------------------------------------------------------------------- -------------------------------- ---------
+ATEND_SP                                                                                                                         LOCKED(TIMED)                    30-OCT-26
+
+
+User altered.
+
+
+USERNAME                                                                                                                         ACCOUNT_STATUS
+-------------------------------------------------------------------------------------------------------------------------------- --------------------------------
+ATEND_SP                                                                                                                         OPEN
+

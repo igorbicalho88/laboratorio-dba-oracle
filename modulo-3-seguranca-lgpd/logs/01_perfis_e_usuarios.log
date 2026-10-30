@@ -1,0 +1,237 @@
+SQL> ALTER SESSION SET CONTAINER = FREEPDB1;
+
+Session altered.
+
+SQL> 
+SQL> -- Recomeço limpo, caso o script seja executado de novo (erros aqui são ignorados)
+SQL> WHENEVER SQLERROR CONTINUE
+SQL> SET ECHO OFF TERMOUT OFF
+DROP USER app_loja
+          *
+ERROR at line 1:
+ORA-01918: user 'APP_LOJA' does not exist
+Help: https://docs.oracle.com/error-help/db/ora-01918/
+
+
+DROP USER atend_mg
+          *
+ERROR at line 1:
+ORA-01918: user 'ATEND_MG' does not exist
+Help: https://docs.oracle.com/error-help/db/ora-01918/
+
+
+DROP USER atend_sp
+          *
+ERROR at line 1:
+ORA-01918: user 'ATEND_SP' does not exist
+Help: https://docs.oracle.com/error-help/db/ora-01918/
+
+
+DROP USER analista_bi
+          *
+ERROR at line 1:
+ORA-01918: user 'ANALISTA_BI' does not exist
+Help: https://docs.oracle.com/error-help/db/ora-01918/
+
+
+DROP USER auditor_dpo
+          *
+ERROR at line 1:
+ORA-01918: user 'AUDITOR_DPO' does not exist
+Help: https://docs.oracle.com/error-help/db/ora-01918/
+
+
+
+User dropped.
+
+
+Role dropped.
+
+
+Role dropped.
+
+
+Role dropped.
+
+
+Role dropped.
+
+
+Profile dropped.
+
+SQL> WHENEVER SQLERROR EXIT FAILURE
+SQL> 
+SQL> -- Política de senhas: bloqueio após 5 erros, troca a cada 90 dias, sem repetir as 5 últimas
+SQL> CREATE PROFILE perfil_lgpd LIMIT
+  2    FAILED_LOGIN_ATTEMPTS	5
+  3    PASSWORD_LOCK_TIME	1/24
+  4    PASSWORD_LIFE_TIME	90
+  5    PASSWORD_GRACE_TIME	7
+  6    PASSWORD_REUSE_MAX	5
+  7    PASSWORD_REUSE_TIME	365
+  8    INACTIVE_ACCOUNT_TIME	60
+  9    PASSWORD_VERIFY_FUNCTION ora12c_verify_function;
+
+Profile created.
+
+SQL> 
+SQL> -- Esquema que guarda as regras de segurança: sem senha, ninguém faz login nele
+SQL> CREATE USER seg_admin NO AUTHENTICATION DEFAULT TABLESPACE lab_dados QUOTA 10M ON lab_dados;
+
+User created.
+
+SQL> 
+SQL> -- Papéis (roles) por função
+SQL> -- (no SQL*Plus, comentário na mesma linha depois do ";" impede a execução: ficam sempre acima)
+SQL> -- lgpd_dados_completos: marcador; quem tem este papel vê CPF e e-mail sem máscara
+SQL> CREATE ROLE lgpd_dados_completos;
+
+Role created.
+
+SQL> -- app_loja_role: a aplicação da loja
+SQL> CREATE ROLE app_loja_role;
+
+Role created.
+
+SQL> -- atendimento: só clientes da sua UF, com CPF e e-mail mascarados
+SQL> CREATE ROLE atendimento;
+
+Role created.
+
+SQL> -- analista: BI, com pedidos e uma visão de clientes SEM dados pessoais
+SQL> CREATE ROLE analista;
+
+Role created.
+
+SQL> 
+SQL> GRANT SELECT, INSERT, UPDATE ON lab.clientes     TO app_loja_role;
+
+Grant succeeded.
+
+SQL> GRANT SELECT, INSERT, UPDATE ON lab.pedidos      TO app_loja_role;
+
+Grant succeeded.
+
+SQL> GRANT SELECT, INSERT, UPDATE ON lab.itens_pedido TO app_loja_role;
+
+Grant succeeded.
+
+SQL> GRANT SELECT		  ON lab.produtos     TO app_loja_role;
+
+Grant succeeded.
+
+SQL> 
+SQL> GRANT SELECT ON lab.clientes TO atendimento;
+
+Grant succeeded.
+
+SQL> -- O atendimento pode corrigir o e-mail, e só isso
+SQL> GRANT UPDATE (email) ON lab.clientes TO atendimento;
+
+Grant succeeded.
+
+SQL> GRANT SELECT ON lab.pedidos      TO atendimento;
+
+Grant succeeded.
+
+SQL> GRANT SELECT ON lab.itens_pedido TO atendimento;
+
+Grant succeeded.
+
+SQL> GRANT SELECT ON lab.produtos     TO atendimento;
+
+Grant succeeded.
+
+SQL> 
+SQL> CREATE OR REPLACE VIEW lab.vw_clientes_analise AS
+  2  SELECT cliente_id, uf, EXTRACT(YEAR FROM data_cadastro) AS ano_cadastro FROM lab.clientes;
+
+View created.
+
+SQL> GRANT SELECT ON lab.vw_clientes_analise TO analista;
+
+Grant succeeded.
+
+SQL> GRANT SELECT ON lab.pedidos      TO analista;
+
+Grant succeeded.
+
+SQL> GRANT SELECT ON lab.itens_pedido TO analista;
+
+Grant succeeded.
+
+SQL> GRANT SELECT ON lab.produtos     TO analista;
+
+Grant succeeded.
+
+SQL> 
+SQL> -- O dono dos dados continua vendo tudo (usado pelos outros módulos)
+SQL> GRANT lgpd_dados_completos TO lab;
+
+Grant succeeded.
+
+SQL> 
+SQL> -- Usuários de teste
+SQL> ACCEPT senha CHAR PROMPT "Senha para os usuarios de teste: " HIDE
+Senha para os usuarios de teste: 
+SQL> -- Dentro de um bloco PL/SQL, um erro não reimprime o comando com a senha na tela/log
+SQL> BEGIN
+  2    FOR u IN (SELECT column_value AS nome
+  3  		   FROM TABLE(sys.odcivarchar2list('APP_LOJA', 'ATEND_MG', 'ATEND_SP', 'ANALISTA_BI', 'AUDITOR_DPO'))) LOOP
+  4  	 EXECUTE IMMEDIATE 'CREATE USER ' || u.nome || ' IDENTIFIED BY "&senha" PROFILE perfil_lgpd';
+  5    END LOOP;
+  6  END;
+  7  /
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> GRANT CREATE SESSION TO app_loja, atend_mg, atend_sp, analista_bi, auditor_dpo;
+
+Grant succeeded.
+
+SQL> GRANT app_loja_role, lgpd_dados_completos TO app_loja;
+
+Grant succeeded.
+
+SQL> GRANT atendimento TO atend_mg, atend_sp;
+
+Grant succeeded.
+
+SQL> GRANT analista    TO analista_bi;
+
+Grant succeeded.
+
+SQL> -- O encarregado lê a trilha de auditoria, não os dados
+SQL> GRANT audit_viewer TO auditor_dpo;
+
+Grant succeeded.
+
+SQL> 
+SQL> SET ECHO OFF
+
+GRANTEE        GRANTED_ROLE
+-------------- ----------------------
+ANALISTA_BI    ANALISTA
+APP_LOJA       APP_LOJA_ROLE
+APP_LOJA       LGPD_DADOS_COMPLETOS
+ATEND_MG       ATENDIMENTO
+ATEND_SP       ATENDIMENTO
+AUDITOR_DPO    AUDIT_VIEWER
+LAB            LGPD_DADOS_COMPLETOS
+LAB            SELECT_CATALOG_ROLE
+
+8 rows selected.
+
+
+USERNAME       ACCOUNT_STATUS                   PROFILE      AUTHENTI
+-------------- -------------------------------- ------------ --------
+ANALISTA_BI    OPEN                             PERFIL_LGPD  PASSWORD
+APP_LOJA       OPEN                             PERFIL_LGPD  PASSWORD
+ATEND_MG       OPEN                             PERFIL_LGPD  PASSWORD
+ATEND_SP       OPEN                             PERFIL_LGPD  PASSWORD
+AUDITOR_DPO    OPEN                             PERFIL_LGPD  PASSWORD
+SEG_ADMIN      OPEN                             DEFAULT      NONE
+
+6 rows selected.
+
