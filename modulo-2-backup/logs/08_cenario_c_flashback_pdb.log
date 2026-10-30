@@ -1,0 +1,89 @@
+### 08_cenario_c_flashback_pdb | 30/10/2026 02:13:29 | oraclelab.localdomain
+
+==================================================================
+>>> Antes da rotina: ponto de restauração
+==================================================================
+
+Restore point created.
+
+
+NAME                                                                                                                                    SCN
+-------------------------------------------------------------------------------------------------------------------------------- ----------
+TIME
+---------------------------------------------------------------------------
+ANTES_EXPURGO_1                                                                                                                     5250016
+30-OCT-26 01.52.08.000000000 AM
+
+ANTES_EXPURGO_2                                                                                                                     5361671
+30-OCT-26 02.13.29.000000000 AM
+
+
+2 rows selected.
+
+Dados: 5050000 pedidos e 10100000 itens
+
+==================================================================
+>>> ERRO: o mesmo expurgo com a data errada
+==================================================================
+
+Session altered.
+
+
+298496 rows deleted.
+
+Elapsed: 00:07:52.20
+
+148921 rows deleted.
+
+Elapsed: 00:05:00.13
+
+Commit complete.
+
+Elapsed: 00:00:00.05
+Dados: 4901079 pedidos e 9801504 itens
+
+==================================================================
+>>> RECUPERAÇÃO com Flashback: fechar PDB -> FLASHBACK -> OPEN RESETLOGS
+==================================================================
+
+Pluggable database altered.
+
+
+Flashback complete.
+
+
+Pluggable database altered.
+
+
+NAME                                                                                                                             OPEN_MODE
+-------------------------------------------------------------------------------------------------------------------------------- ----------
+PDB$SEED                                                                                                                         READ ONLY
+FREEPDB1                                                                                                                         READ WRITE
+
+2 rows selected.
+
+Dados: 5050000 pedidos e 10100000 itens
+30/10 02:31 | Cenário C com Flashback PDB: PDB de volta em 4 min 53 s | antes do erro: 5050000 pedidos e 10100000 itens | depois: 5050000 pedidos e 10100000 itens
+
+==================================================================
+>>> Limpeza dos pontos de restauração
+==================================================================
+
+Restore point dropped.
+
+
+Restore point dropped.
+
+
+===== RESUMO DO MÓDULO 2 =====
+30/10 01:12 | Backup nivel0: OK em 4 min 18 s, 914 MB gravados (5218 MB lidos)
+30/10 01:14 | Backup nivel1: OK em 1 min 05 s, 74 MB gravados (4605 MB lidos)
+30/10 01:15 | Backup archivelog: OK em 0 min 15 s, 1 MB gravados (18 MB lidos)
+30/10 01:21 | Validação dos backups: OK em 4 min 21 s, nenhum bloco corrompido
+30/10 01:24 | Cenário A (perda do arquivo de dados): recuperado em 2 min 33 s, sem perda de dados (5050000 pedidos e 10100000 itens)
+30/10 01:36 | Backup archivelog: OK em 4 min 57 s, 3 MB gravados (23 MB lidos)
+30/10 01:50 | Cenário B (UPDATE sem WHERE): Flashback Table, ver tempo em logs/06_cenario_b_update_sem_where.log
+30/10 02:08 | Cenário C com RMAN PITR: PDB de volta em 5 min 56 s | antes do erro: 5050000 pedidos e 10100000 itens | depois: 5050000 pedidos e 10100000 itens
+30/10 02:13 | Backup nivel0: OK em 4 min 18 s, 1102 MB gravados (5447 MB lidos)
+30/10 02:31 | Backup archivelog: OK em 1 min 06 s, 164 MB gravados (485 MB lidos)
+30/10 02:31 | Cenário C com Flashback PDB: PDB de volta em 4 min 53 s | antes do erro: 5050000 pedidos e 10100000 itens | depois: 5050000 pedidos e 10100000 itens

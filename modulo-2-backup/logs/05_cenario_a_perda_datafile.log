@@ -1,0 +1,109 @@
+### 05_cenario_a_perda_datafile | 30/10/2026 01:21:51 | oraclelab.localdomain
+
+==================================================================
+>>> Situação normal
+==================================================================
+-rw-r-----. 1 oracle oinstall 1.7G Oct 30 01:20 /opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf
+Dados: 5050000 pedidos e 10100000 itens
+
+==================================================================
+>>> DESASTRE: o arquivo /opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf é apagado
+==================================================================
+ls: cannot access '/opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf': No such file or directory
+
+==================================================================
+>>> Efeito: a aplicação recebe erro; o resto do PDB continua no ar
+==================================================================
+
+System altered.
+
+
+Session altered.
+
+SELECT COUNT(*) FROM lab.pedidos
+                         *
+ERROR at line 1:
+ORA-01116: error in opening database file 16
+ORA-01110: data file 16: '/opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf'
+ORA-27041: unable to open file
+Linux-x86_64 Error: 2: No such file or directory
+Additional information: 3
+Help: https://docs.oracle.com/error-help/db/ora-01116/
+
+
+
+USUARIOS_DO_PDB
+---------------
+             36
+
+1 row selected.
+
+
+==================================================================
+>>> RECUPERAÇÃO: tablespace offline -> RESTORE -> RECOVER -> online
+==================================================================
+
+Session altered.
+
+
+Tablespace altered.
+
+
+Recovery Manager: Release 23.26.3.0.0 - Production on Fri Oct 30 01:21:56 2026
+Version 23.26.3.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: FREE (DBID=1519974490)
+
+RMAN> RESTORE TABLESPACE FREEPDB1:LAB_DADOS;
+2> RECOVER TABLESPACE FREEPDB1:LAB_DADOS;
+3> 
+Starting restore at 30-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=64 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00016 to /opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf
+channel ORA_DISK_1: reading from backup piece /opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og8618cw_.bkp
+channel ORA_DISK_1: piece handle=/opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og8618cw_.bkp tag=TAG20261030T010807
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:01:55
+Finished restore at 30-OCT-26
+
+Starting recover at 30-OCT-26
+using channel ORA_DISK_1
+channel ORA_DISK_1: starting incremental datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+destination for restore of datafile 00016: /opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf
+channel ORA_DISK_1: reading from backup piece /opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd1_TAG20261030T011346_og86d6r1_.bkp
+channel ORA_DISK_1: piece handle=/opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd1_TAG20261030T011346_og86d6r1_.bkp tag=TAG20261030T011346
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:25
+
+starting media recovery
+
+archived log for thread 1 with sequence 16 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_16_og86f61c_.arc
+archived log for thread 1 with sequence 17 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_17_og86g3qw_.arc
+archived log for thread 1 with sequence 18 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_18_og86g45k_.arc
+recovery status time_needed 2026-10-30 01:13:47
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_16_og86f61c_.arc thread=1 sequence=16
+media recovery complete, elapsed time: 00:00:01
+Finished recover at 30-OCT-26
+
+Recovery Manager complete.
+
+Session altered.
+
+
+Tablespace altered.
+
+
+==================================================================
+>>> Depois da recuperação
+==================================================================
+-rw-r-----. 1 oracle oinstall 1.7G Oct 30 01:24 /opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf
+Dados: 5050000 pedidos e 10100000 itens
+30/10 01:24 | Cenário A (perda do arquivo de dados): recuperado em 2 min 33 s, sem perda de dados (5050000 pedidos e 10100000 itens)

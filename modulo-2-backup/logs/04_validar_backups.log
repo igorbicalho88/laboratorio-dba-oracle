@@ -1,0 +1,122 @@
+### 04_validar_backups | 30/10/2026 01:16:51 | oraclelab.localdomain
+
+Recovery Manager: Release 23.26.3.0.0 - Production on Fri Oct 30 01:16:51 2026
+Version 23.26.3.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: FREE (DBID=1519974490)
+
+RMAN> RESTORE DATABASE VALIDATE CHECK LOGICAL;
+2> RESTORE ARCHIVELOG FROM TIME 'SYSDATE-1' VALIDATE;
+3> REPORT NEED BACKUP;
+4> REPORT OBSOLETE;
+5> LIST BACKUP SUMMARY;
+6> 
+Starting restore at 30-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=220 device type=DISK
+
+channel ORA_DISK_1: starting validation of datafile backup set
+channel ORA_DISK_1: reading from backup piece /opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og8618cw_.bkp
+channel ORA_DISK_1: piece handle=/opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og8618cw_.bkp tag=TAG20261030T010807
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: validation complete, elapsed time: 00:02:09
+channel ORA_DISK_1: starting validation of datafile backup set
+channel ORA_DISK_1: reading from backup piece /opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og865lcy_.bkp
+channel ORA_DISK_1: piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og865lcy_.bkp tag=TAG20261030T010807
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: validation complete, elapsed time: 00:01:30
+channel ORA_DISK_1: starting validation of datafile backup set
+channel ORA_DISK_1: reading from backup piece /opt/oracle/fast_recovery_area/FREE/55E26E818ABB346CE063499B5E643C8D/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og867y5x_.bkp
+channel ORA_DISK_1: piece handle=/opt/oracle/fast_recovery_area/FREE/55E26E818ABB346CE063499B5E643C8D/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og867y5x_.bkp tag=TAG20261030T010807
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:26
+Finished restore at 30-OCT-26
+
+Starting restore at 30-OCT-26
+using channel ORA_DISK_1
+
+channel ORA_DISK_1: scanning archived log /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_12_og85y5lt_.arc
+channel ORA_DISK_1: scanning archived log /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_13_og8614qw_.arc
+channel ORA_DISK_1: scanning archived log /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_14_og868qsd_.arc
+channel ORA_DISK_1: scanning archived log /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_15_og86cmqj_.arc
+channel ORA_DISK_1: scanning archived log /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_16_og86f61c_.arc
+channel ORA_DISK_1: scanning archived log /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_17_og86g3qw_.arc
+channel ORA_DISK_1: scanning archived log /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_18_og86g45k_.arc
+Finished restore at 30-OCT-26
+
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to recovery window of 7 days
+Report of files that must be backed up to satisfy 7 days recovery window
+File Days  Name
+---- ----- -----------------------------------------------------
+
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to recovery window of 7 days
+no obsolete backups found
+
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time #Pieces #Copies Compressed Tag
+------- -- -- - ----------- --------------- ------- ------- ---------- ---
+1       B  A  A DISK        30-OCT-26       1       1       YES        NIVEL0
+2       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+3       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+4       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+5       B  A  A DISK        30-OCT-26       1       1       YES        NIVEL0
+6       B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T011210
+7       B  A  A DISK        30-OCT-26       1       1       YES        NIVEL1
+8       B  1  A DISK        30-OCT-26       1       1       YES        TAG20261030T011346
+9       B  1  A DISK        30-OCT-26       1       1       YES        TAG20261030T011346
+10      B  A  A DISK        30-OCT-26       1       1       YES        NIVEL1
+11      B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T011432
+12      B  A  A DISK        30-OCT-26       1       1       YES        ARCH
+13      B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T011502
+
+Recovery Manager complete.
+
+==================================================================
+>>> Uso da Fast Recovery Area
+==================================================================
+
+FILE_TYPE                PCT_USADO   ARQUIVOS
+----------------------- ---------- ----------
+CONTROL FILE                     0          0
+REDO LOG                         0          0
+ARCHIVED LOG                   .25          7
+BACKUP PIECE                  3.87         13
+IMAGE COPY                       0          0
+FLASHBACK LOG                 1.56          2
+FOREIGN ARCHIVED LOG             0          0
+AUXILIARY DATAFILE COPY          0          0
+
+8 rows selected.
+
+
+ LIMITE_GB   USADO_GB
+---------- ----------
+        25        1.4
+
+1 row selected.
+
+
+INICIO      INPUT_TYPE      STATUS         MB_LIDOS MB_GRAVADOS
+----------- --------------- ------------ ---------- -----------
+DURACAO
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+30/10 01:08 DB INCR         COMPLETED          5218         914
+00:04:05
+
+30/10 01:13 DB INCR         COMPLETED          4605          74
+00:00:52
+
+30/10 01:14 ARCHIVELOG      COMPLETED            18           1
+00:00:05
+
+
+3 rows selected.
+
+30/10 01:21 | Validação dos backups: OK em 4 min 21 s, nenhum bloco corrompido

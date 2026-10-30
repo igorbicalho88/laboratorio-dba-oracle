@@ -5,7 +5,7 @@
 | Módulo | Tema | Situação |
 |---|---|---|
 | [1. Tuning de desempenho](#módulo-1-tuning-de-desempenho) | Planos de execução, índices, reescrita de SQL e particionamento online | ✅ Concluído |
-| 2. Backup e recuperação | ARCHIVELOG, RMAN, recuperação até um ponto no tempo, teste de desastre | Em breve |
+| [2. Backup e recuperação](#módulo-2-backup-e-recuperação) | ARCHIVELOG, RMAN, Flashback e três desastres simulados com tempo de recuperação medido | ✅ Concluído |
 | 3. Segurança e LGPD | Perfis de acesso, segurança por linha, mascaramento de dados pessoais, auditoria | Em breve |
 | 4. Migração para a nuvem | Migração para o Oracle Autonomous Database (OCI) | Em breve |
 
@@ -77,6 +77,68 @@ Os planos de execução completos de antes e depois estão em [`modulo-1-tuning/
 
 ---
 
+## Módulo 2: backup e recuperação
+
+**Cenário:** o mesmo banco do módulo 1 (5 milhões de pedidos e 10 milhões de itens, cerca de 5 GB no PDB) recebe uma estratégia de backup de produção, que depois é posta à prova em **três desastres simulados**: um arquivo de dados apagado do disco, um `UPDATE` sem `WHERE` e uma rotina de expurgo que apaga o mês errado em duas tabelas.
+
+![Tempo de recuperação por cenário](docs/recuperacao_tempos.png)
+
+| Cenário | O que aconteceu | Solução | Indisponibilidade | Dados perdidos |
+|---|---|---|---|---|
+| **A** | O arquivo `lab_dados01.dbf` (1,7 GB) some do disco; a aplicação recebe `ORA-01116` | Só a tablespace afetada fica offline → RMAN `RESTORE` (nível 0) + `RECOVER` (nível 1 + archivelogs) → online | **2 min 33 s**, só para as tabelas da aplicação; o resto do PDB continuou no ar | Nenhum |
+| **B** | Uma promoção para um produto é aplicada ao catálogo inteiro: 5 mil preços viram R$ 9,90, com `COMMIT` | Diagnóstico com Flashback Version Query (o que mudou e quando) + `FLASHBACK TABLE` | **6 s**, sem parar nada e sem tocar em backup | Nenhum |
+| **C** | O expurgo de dados antigos roda com a data errada e apaga out/2025: 148.921 pedidos e 298.496 itens, com `COMMIT` | **1)** RMAN: PDB volta até o SCN do ponto de restauração (PITR) | **5 min 56 s** com o PDB fechado | Nenhum |
+| | O mesmo erro, repetido | **2)** `FLASHBACK PLUGGABLE DATABASE` até o ponto de restauração | **4 min 53 s** com o PDB fechado | Nenhum |
+
+*Em todos os cenários, a contagem de linhas depois da recuperação bateu exatamente com a de antes do problema (5.050.000 pedidos e 10.100.000 itens).*
+
+**Estratégia de backup:**
+
+| Item | Configuração |
+|---|---|
+| Modo do banco | `ARCHIVELOG` + Flashback Database (retenção de 24 h), na Fast Recovery Area de 25 GB |
+| Política do RMAN | Janela de recuperação de 7 dias, autobackup do controlfile e do spfile, compressão BASIC e archivelog apagado só depois de ter backup |
+| Agenda (cron) | Domingo: nível 0 · Segunda a sábado: nível 1 · De hora em hora: archivelogs |
+| Rotina | [`backup_rman.sh`](modulo-2-backup/backup_rman.sh): crosscheck, backup, limpeza do que ficou obsoleto e registro do resultado |
+
+| Backup | Lido | Gravado | Tempo |
+|---|---|---|---|
+| Nível 0 (todos os blocos usados) | 5.218 MB | **914 MB** | 4 min 18 s |
+| Nível 1, depois de um "dia de operação" (50 mil pedidos, 100 mil itens e 14 mil atualizações) | 4.605 MB | **74 MB** | 1 min 05 s |
+| Archivelogs | 18 MB | 1 MB | 15 s |
+| Validação: `RESTORE DATABASE VALIDATE CHECK LOGICAL` | todos os backups | nenhum bloco corrompido | 4 min 21 s |
+
+**Destaques:**
+
+- **A lição que não estava no roteiro:** na primeira execução do cenário B, o `FLASHBACK TABLE` passou de **8 minutos sem terminar** e foi interrompido. Ele refaz as linhas de `PRODUTOS`, e a cada linha o Oracle confere a chave estrangeira em `ITENS_PEDIDO`, que não tinha índice em `produto_id`: 5 mil leituras de uma tabela de 10 milhões de linhas. Com o índice (57 s para criar), o mesmo comando levou **6 segundos**. É o mesmo problema do cenário 1 do módulo 1, agora atrasando uma recuperação de desastre ([log da tentativa](modulo-2-backup/logs/06_primeira_tentativa_travou.log)).
+- **Recuperar só o que quebrou:** no cenário A, a tablespace danificada foi restaurada com o PDB aberto; consultas a outras partes do banco continuaram funcionando durante todo o processo.
+- **Cada ferramenta no seu lugar:** erro numa tabela → Flashback Table (segundos, sem parada); erro espalhado em várias tabelas → Flashback PDB; perda de arquivo ou erro fora da janela de flashback → RMAN.
+- **RMAN x Flashback no cenário C:** a diferença foi pequena (5 min 56 s x 4 min 53 s) porque o PDB tem só 5 GB e o disco é local: o RMAN restaurou tudo em 2 min e reaplicou os logs em 12 s; o restante foi fechar e reabrir o PDB depois de um `DELETE` grande. O tempo do RMAN cresce com o **tamanho do banco**; o do Flashback, com o **volume alterado**: num banco de centenas de GB, a vantagem do Flashback cresce muito.
+- **Ponto de restauração antes de processos em massa** (`CREATE RESTORE POINT`): é ele que diz "para onde voltar" sem precisar adivinhar horários.
+- **Depois de um `OPEN RESETLOGS`, novo backup nível 0** é feito automaticamente pelo script do cenário C.
+- **Perda máxima de dados:** nos três cenários foi zero, porque os redo logs online estavam intactos. Se o servidor inteiro fosse perdido, a agenda de archivelogs limita a perda a no máximo 1 hora.
+
+**Como reproduzir** (dentro de `modulo-2-backup`, na VM, como `oracle`):
+
+```bash
+./01_ativar_archivelog.sh            # ARCHIVELOG, Flashback e Fast Recovery Area
+./02_configurar_rman.sh              # política do RMAN
+./backup_rman.sh nivel0              # backup completo
+./03_simular_movimento.sh            # um dia de operação
+./backup_rman.sh nivel1              # incremental
+./backup_rman.sh archivelog
+crontab crontab_oracle.txt           # agenda dos backups
+./04_validar_backups.sh              # os backups restauram?
+./05_cenario_a_perda_datafile.sh     # cenário A
+./06_cenario_b_update_sem_where.sh   # cenário B
+./07_cenario_c_pitr_rman.sh          # cenário C com RMAN (+ novo nível 0)
+./08_cenario_c_flashback_pdb.sh      # cenário C com Flashback
+```
+
+Todas as saídas estão em [`modulo-2-backup/logs`](modulo-2-backup/logs), e o resumo com os tempos, em [`resumo.txt`](modulo-2-backup/logs/resumo.txt).
+
+---
+
 ## Estrutura
 
 ```
@@ -88,12 +150,22 @@ laboratorio-dba-oracle/
 │   ├── 03_otimizacoes.sql        # índices e particionamento online
 │   ├── 04_consultas_depois.sql   # mesmos cenários, otimizados
 │   └── logs/                     # evidências: antes, otimizações e depois
+├── modulo-2-backup/
+│   ├── comum.sh                  # funções comuns (SQL*Plus, RMAN, log, cronômetro)
+│   ├── 01_ativar_archivelog.sh   # ARCHIVELOG, Flashback e Fast Recovery Area
+│   ├── 02_configurar_rman.sh     # política do RMAN
+│   ├── backup_rman.sh            # rotina de backup: nivel0 | nivel1 | archivelog
+│   ├── crontab_oracle.txt        # agenda dos backups
+│   ├── 03_simular_movimento.sh   # um dia de operação entre os backups
+│   ├── 04_validar_backups.sh     # RESTORE VALIDATE e uso da Fast Recovery Area
+│   ├── 05 a 08_cenario_*.sh      # os três desastres e suas recuperações
+│   └── logs/                     # evidências de cada execução
 └── docs/                         # imagens do README
 ```
 
 ## Tecnologias
 
-Oracle AI Database 26ai Free · Oracle Linux 10 · SQL*Plus · PL/SQL · DBMS_XPLAN · DBMS_STATS · Partitioning · VirtualBox
+Oracle AI Database 26ai Free · Oracle Linux 10 · SQL*Plus · PL/SQL · DBMS_XPLAN · DBMS_STATS · Partitioning · RMAN · Flashback (Query, Table, Database) · Bash · cron · VirtualBox
 
 ## Autor
 

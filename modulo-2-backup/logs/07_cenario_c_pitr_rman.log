@@ -1,0 +1,147 @@
+### 07_cenario_c_pitr_rman | 30/10/2026 01:52:07 | oraclelab.localdomain
+
+==================================================================
+>>> Antes da rotina: ponto de restauração (boa prática antes de qualquer processo em massa)
+==================================================================
+
+Restore point created.
+
+
+NAME                                                                                                                                    SCN
+-------------------------------------------------------------------------------------------------------------------------------- ----------
+TIME
+---------------------------------------------------------------------------
+ANTES_EXPURGO_1                                                                                                                     5250016
+30-OCT-26 01.52.08.000000000 AM
+
+
+1 row selected.
+
+Dados: 5050000 pedidos e 10100000 itens | SCN do ponto de restauração: 5250016
+
+==================================================================
+>>> ERRO: expurgo apaga out/2025 em vez de dados antigos
+==================================================================
+
+Session altered.
+
+
+298496 rows deleted.
+
+Elapsed: 00:04:09.48
+
+148921 rows deleted.
+
+Elapsed: 00:06:29.92
+
+Commit complete.
+
+Elapsed: 00:00:00.02
+Dados: 4901079 pedidos e 9801504 itens
+
+==================================================================
+>>> RECUPERAÇÃO com RMAN: fechar PDB -> RESTORE -> RECOVER UNTIL SCN -> OPEN RESETLOGS
+==================================================================
+
+Pluggable database altered.
+
+
+Recovery Manager: Release 23.26.3.0.0 - Production on Fri Oct 30 02:05:53 2026
+Version 23.26.3.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: FREE (DBID=1519974490)
+
+RMAN> RUN {
+2>   SET UNTIL SCN 5250016;
+3>   RESTORE PLUGGABLE DATABASE FREEPDB1;
+4>   RECOVER PLUGGABLE DATABASE FREEPDB1;
+5> }
+6> 
+executing command: SET until clause (SCN)
+
+Starting restore at 30-OCT-26
+using target database control file instead of recovery catalog
+List of Pluggable Database Incarnations
+DB Key  PDB Key PDBInc Key DBInc Key   PDB Name   Status     Inc SCN           Inc Time           Begin Reset SCN   Begin Reset Time
+------- ------- --------   ---------   -------    --------  ---------------   ------------------  ---------------  ------------------
+2       3        0          2          FREEPDB1   CURRENT    2084882          29-OCT-26            2084882          29-OCT-26            
+End Reset SCN:2084882          End Reset Time:29-OCT-26        Guid:5EFCDFD9D72B3A5FE0650A0027DC954B
+1       3        0          1          FREEPDB1   PARENT     1                05-JUL-26            1                05-JUL-26            
+End Reset SCN:1                End Reset Time:05-JUL-26        Guid:5EFCDFD9D72B3A5FE0650A0027DC954B
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=224 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00012 to /opt/oracle/oradata/FREE/FREEPDB1/system01.dbf
+channel ORA_DISK_1: restoring datafile 00013 to /opt/oracle/oradata/FREE/FREEPDB1/sysaux01.dbf
+channel ORA_DISK_1: restoring datafile 00014 to /opt/oracle/oradata/FREE/FREEPDB1/undotbs01.dbf
+channel ORA_DISK_1: restoring datafile 00015 to /opt/oracle/oradata/FREE/FREEPDB1/users01.dbf
+channel ORA_DISK_1: restoring datafile 00016 to /opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf
+channel ORA_DISK_1: reading from backup piece /opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og8618cw_.bkp
+channel ORA_DISK_1: piece handle=/opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og8618cw_.bkp tag=TAG20261030T010807
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:02:02
+Finished restore at 30-OCT-26
+
+Starting recover at 30-OCT-26
+List of Pluggable Database Incarnations
+DB Key  PDB Key PDBInc Key DBInc Key   PDB Name   Status     Inc SCN           Inc Time           Begin Reset SCN   Begin Reset Time
+------- ------- --------   ---------   -------    --------  ---------------   ------------------  ---------------  ------------------
+2       3        0          2          FREEPDB1   CURRENT    2084882          29-OCT-26            2084882          29-OCT-26            
+End Reset SCN:2084882          End Reset Time:29-OCT-26        Guid:5EFCDFD9D72B3A5FE0650A0027DC954B
+1       3        0          1          FREEPDB1   PARENT     1                05-JUL-26            1                05-JUL-26            
+End Reset SCN:1                End Reset Time:05-JUL-26        Guid:5EFCDFD9D72B3A5FE0650A0027DC954B
+using channel ORA_DISK_1
+
+channel ORA_DISK_1: starting incremental datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+destination for restore of datafile 00012: /opt/oracle/oradata/FREE/FREEPDB1/system01.dbf
+destination for restore of datafile 00013: /opt/oracle/oradata/FREE/FREEPDB1/sysaux01.dbf
+destination for restore of datafile 00014: /opt/oracle/oradata/FREE/FREEPDB1/undotbs01.dbf
+destination for restore of datafile 00015: /opt/oracle/oradata/FREE/FREEPDB1/users01.dbf
+destination for restore of datafile 00016: /opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf
+channel ORA_DISK_1: reading from backup piece /opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd1_TAG20261030T011346_og86d6r1_.bkp
+channel ORA_DISK_1: piece handle=/opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd1_TAG20261030T011346_og86d6r1_.bkp tag=TAG20261030T011346
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:25
+
+starting media recovery
+
+archived log for thread 1 with sequence 16 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_16_og86f61c_.arc
+archived log for thread 1 with sequence 17 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_17_og86g3qw_.arc
+archived log for thread 1 with sequence 18 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_18_og86g45k_.arc
+archived log for thread 1 with sequence 19 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_19_og87kf54_.arc
+archived log for thread 1 with sequence 20 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_20_og87kfl1_.arc
+archived log for thread 1 with sequence 21 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_21_og88hkcv_.arc
+archived log for thread 1 with sequence 22 is already on disk as file /opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_22_og88tg0r_.arc
+recovery status time_needed 2026-10-30 01:13:47
+recovery status time_needed 2026-10-30 01:14:29
+recovery status time_needed 2026-10-30 01:14:59
+recovery status time_needed 2026-10-30 01:15:00
+recovery status time_needed 2026-10-30 01:33:49
+recovery status time_needed 2026-10-30 01:33:49
+media recovery complete, elapsed time: 00:00:12
+Finished recover at 30-OCT-26
+
+Recovery Manager complete.
+
+Pluggable database altered.
+
+
+NAME                                                                                                                             OPEN_MODE
+-------------------------------------------------------------------------------------------------------------------------------- ----------
+PDB$SEED                                                                                                                         READ ONLY
+FREEPDB1                                                                                                                         READ WRITE
+
+2 rows selected.
+
+Dados: 5050000 pedidos e 10100000 itens
+30/10 02:08 | Cenário C com RMAN PITR: PDB de volta em 5 min 56 s | antes do erro: 5050000 pedidos e 10100000 itens | depois: 5050000 pedidos e 10100000 itens
+
+==================================================================
+>>> Depois de um OPEN RESETLOGS, novo backup completo (boa prática)
+==================================================================
+30/10 02:13 | Backup nivel0: OK em 4 min 18 s, 1102 MB gravados (5447 MB lidos)

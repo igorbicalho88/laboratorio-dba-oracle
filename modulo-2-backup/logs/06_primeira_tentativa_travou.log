@@ -1,0 +1,67 @@
+### 06_cenario_b_update_sem_where | 30/10/2026 01:25:05 | oraclelab.localdomain
+
+Session altered.
+
+
+Table altered.
+
+
+SCN_ANTES
+----------------------------------------
+5247037
+
+1 row selected.
+
+
+>>> Situação normal
+
+  PRODUTOS MIN(PRECO) MAX(PRECO) SOMA_PRECOS
+---------- ---------- ---------- -----------
+      5000       10.3     999.99  2556968.65
+
+1 row selected.
+
+
+>>> ERRO: a promoção era só para o produto 42, mas o WHERE ficou de fora
+
+5000 rows updated.
+
+
+Commit complete.
+
+
+  PRODUTOS MIN(PRECO) MAX(PRECO) SOMA_PRECOS
+---------- ---------- ---------- -----------
+      5000        9.9        9.9       49500
+
+1 row selected.
+
+
+>>> Diagnóstico com Flashback Query: o que mudou e quando
+old   2:   FROM lab.produtos VERSIONS BETWEEN SCN &scn_antes AND MAXVALUE
+new   2:   FROM lab.produtos VERSIONS BETWEEN SCN 5247037 AND MAXVALUE
+
+O QUANDO                                                                           PRECO
+- --------------------------------------------------------------------------- ----------
+                                                                                  155.67
+U 30-OCT-26 01.25.06 AM                                                              9.9
+
+2 rows selected.
+
+old   1: SELECT produto_id, preco AS preco_antes FROM lab.produtos AS OF SCN &scn_antes WHERE produto_id <= 5 ORDER BY 1
+new   1: SELECT produto_id, preco AS preco_antes FROM lab.produtos AS OF SCN 5247037 WHERE produto_id <= 5 ORDER BY 1
+
+PRODUTO_ID PRECO_ANTES
+---------- -----------
+         1      155.67
+         2      400.06
+         3      424.59
+         4      825.31
+         5      440.98
+
+5 rows selected.
+
+
+>>> CORREÇÃO: a tabela volta ao momento anterior ao erro
+old   1: FLASHBACK TABLE lab.produtos TO SCN &scn_antes
+new   1: FLASHBACK TABLE lab.produtos TO SCN 5247037

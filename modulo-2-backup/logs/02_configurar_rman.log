@@ -1,0 +1,60 @@
+### 02_configurar_rman | 30/10/2026 01:07:32 | oraclelab.localdomain
+
+Recovery Manager: Release 23.26.3.0.0 - Production on Fri Oct 30 01:07:32 2026
+Version 23.26.3.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: FREE (DBID=1519974490)
+
+RMAN> # Guardar backups suficientes para voltar a qualquer momento dos últimos 7 dias
+2> CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+3> # Cópia automática do controlfile e do spfile a cada backup (essencial para recuperar do zero)
+4> CONFIGURE CONTROLFILE AUTOBACKUP ON;
+5> # Não copiar de novo arquivos idênticos já salvos (ex.: archivelogs)
+6> CONFIGURE BACKUP OPTIMIZATION ON;
+7> # Compressão BASIC: incluída na licença, sem custo extra
+8> CONFIGURE DEVICE TYPE DISK BACKUP TYPE TO COMPRESSED BACKUPSET;
+9> # Um archivelog só pode ser apagado depois de ter pelo menos um backup
+10> CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DISK;
+11> SHOW ALL;
+12> 
+using target database control file instead of recovery catalog
+new RMAN configuration parameters:
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+new RMAN configuration parameters are successfully stored
+
+new RMAN configuration parameters:
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+new RMAN configuration parameters are successfully stored
+
+new RMAN configuration parameters:
+CONFIGURE BACKUP OPTIMIZATION ON;
+new RMAN configuration parameters are successfully stored
+
+new RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK BACKUP TYPE TO COMPRESSED BACKUPSET PARALLELISM 1;
+new RMAN configuration parameters are successfully stored
+
+new RMAN configuration parameters:
+CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DISK;
+new RMAN configuration parameters are successfully stored
+
+RMAN configuration parameters for database with db_unique_name FREE are:
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE BACKUP OPTIMIZATION ON;
+CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '%F'; # default
+CONFIGURE DEVICE TYPE DISK BACKUP TYPE TO COMPRESSED BACKUPSET PARALLELISM 1;
+CONFIGURE DATAFILE BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE ARCHIVELOG BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE MAXSETSIZE TO UNLIMITED; # default
+CONFIGURE ENCRYPTION FOR DATABASE OFF; # default
+CONFIGURE ENCRYPTION ALGORITHM 'AES256'; # default
+CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE ; # default
+CONFIGURE RMAN OUTPUT TO KEEP FOR 7 DAYS; # default
+CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DISK;
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/opt/oracle/product/26ai/dbhomeFree/dbs/snapcf_FREE.f'; # default
+
+Recovery Manager complete.

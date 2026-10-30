@@ -1,0 +1,108 @@
+### 01_ativar_archivelog | 30/10/2026 01:06:04 | oraclelab.localdomain
+
+==================================================================
+>>> Espaço em disco disponível para a Fast Recovery Area
+==================================================================
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   49G   16G   34G  32% /
+
+==================================================================
+>>> Situação antes
+==================================================================
+
+LOG_MODE     FLASHBACK_ON
+------------ ------------------
+NOARCHIVELOG NO
+
+1 row selected.
+
+
+LOCAL_UNDO
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+TRUE
+
+1 row selected.
+
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+db_recovery_file_dest                string
+db_recovery_file_dest_size           big integer 0
+
+==================================================================
+>>> Fast Recovery Area (backups, archivelogs e logs de flashback) e retenção do flashback (24 h)
+==================================================================
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+==================================================================
+>>> Reinício em MOUNT para ligar o ARCHIVELOG
+==================================================================
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+ORACLE instance started.
+
+Total System Global Area 1603398928 bytes
+Fixed Size                  5033232 bytes
+Variable Size             503316480 bytes
+Database Buffers         1090519040 bytes
+Redo Buffers                4530176 bytes
+Database mounted.
+
+Database altered.
+
+
+Database altered.
+
+
+Database altered.
+
+
+Pluggable database altered.
+
+
+Pluggable database altered.
+
+
+==================================================================
+>>> Situação depois
+==================================================================
+Database log mode              Archive Mode
+Automatic archival             Enabled
+Archive destination            USE_DB_RECOVERY_FILE_DEST
+Oldest online log sequence     12
+Next log sequence to archive   12
+Current log sequence           11
+
+LOG_MODE     FLASHBACK_ON
+------------ ------------------
+ARCHIVELOG   YES
+
+1 row selected.
+
+
+NAME                                                                                                                             OPEN_MODE
+-------------------------------------------------------------------------------------------------------------------------------- ----------
+PDB$SEED                                                                                                                         READ ONLY
+FREEPDB1                                                                                                                         READ WRITE
+
+2 rows selected.
+
+
+System altered.
+
+
+NAME                                                                                                         MB
+---------------------------------------------------------------------------------------------------- ----------
+/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_12_og85y5lt_.arc                            3
+
+1 row selected.
+

@@ -1,0 +1,83 @@
+### 06_cenario_b_update_sem_where | 30/10/2026 01:48:56 | oraclelab.localdomain
+
+Session altered.
+
+
+Index created.
+
+Elapsed: 00:00:57.26
+
+Table altered.
+
+
+SCN_ANTES
+----------------------------------------
+5249872
+
+1 row selected.
+
+
+>>> Situação normal
+
+  PRODUTOS MIN(PRECO) MAX(PRECO) SOMA_PRECOS
+---------- ---------- ---------- -----------
+      5000       10.3     999.99  2556968.65
+
+1 row selected.
+
+
+>>> ERRO: a promoção era só para o produto 42, mas o WHERE ficou de fora
+
+5000 rows updated.
+
+
+Commit complete.
+
+
+  PRODUTOS MIN(PRECO) MAX(PRECO) SOMA_PRECOS
+---------- ---------- ---------- -----------
+      5000        9.9        9.9       49500
+
+1 row selected.
+
+
+>>> Diagnóstico com Flashback Query: o que mudou e quando
+old   2:   FROM lab.produtos VERSIONS BETWEEN SCN &scn_antes AND MAXVALUE
+new   2:   FROM lab.produtos VERSIONS BETWEEN SCN 5249872 AND MAXVALUE
+
+O QUANDO                                                                           PRECO
+- --------------------------------------------------------------------------- ----------
+                                                                                  155.67
+U 30-OCT-26 01.49.52 AM                                                              9.9
+
+2 rows selected.
+
+old   1: SELECT produto_id, preco AS preco_antes FROM lab.produtos AS OF SCN &scn_antes WHERE produto_id <= 5 ORDER BY 1
+new   1: SELECT produto_id, preco AS preco_antes FROM lab.produtos AS OF SCN 5249872 WHERE produto_id <= 5 ORDER BY 1
+
+PRODUTO_ID PRECO_ANTES
+---------- -----------
+         1      155.67
+         2      400.06
+         3      424.59
+         4      825.31
+         5      440.98
+
+5 rows selected.
+
+
+>>> CORREÇÃO: a tabela volta ao momento anterior ao erro
+old   1: FLASHBACK TABLE lab.produtos TO SCN &scn_antes
+new   1: FLASHBACK TABLE lab.produtos TO SCN 5249872
+
+Flashback complete.
+
+Elapsed: 00:00:06.06
+
+  PRODUTOS MIN(PRECO) MAX(PRECO) SOMA_PRECOS
+---------- ---------- ---------- -----------
+      5000       10.3     999.99  2556968.65
+
+1 row selected.
+
+30/10 01:50 | Cenário B (UPDATE sem WHERE): Flashback Table, ver tempo em logs/06_cenario_b_update_sem_where.log

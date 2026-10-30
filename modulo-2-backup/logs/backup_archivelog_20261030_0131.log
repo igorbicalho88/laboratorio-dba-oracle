@@ -1,0 +1,123 @@
+### backup_archivelog_20261030_0131 | 30/10/2026 01:31:40 | oraclelab.localdomain
+
+Recovery Manager: Release 23.26.3.0.0 - Production on Fri Oct 30 01:31:40 2026
+Version 23.26.3.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: FREE (DBID=1519974490)
+
+RMAN> CROSSCHECK BACKUP;
+2> CROSSCHECK ARCHIVELOG ALL;
+3> ALTER SYSTEM ARCHIVE LOG CURRENT;
+4> BACKUP ARCHIVELOG ALL NOT BACKED UP 1 TIMES TAG ARCH;
+5> DELETE NOPROMPT OBSOLETE;
+6> DELETE NOPROMPT EXPIRED BACKUP;
+7> LIST BACKUP SUMMARY;
+8> 
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=38 device type=DISK
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_annnn_NIVEL0_og8615qt_.bkp RECID=1 STAMP=1247965685
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og8618cw_.bkp RECID=2 STAMP=1247965688
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og865lcy_.bkp RECID=3 STAMP=1247965826
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/55E26E818ABB346CE063499B5E643C8D/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og867y5x_.bkp RECID=4 STAMP=1247965902
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_annnn_NIVEL0_og868rl8_.bkp RECID=5 STAMP=1247965928
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/autobackup/2026_10_30/o1_mf_s_1247965930_og868tsr_.bkp RECID=6 STAMP=1247965930
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_annnn_NIVEL1_og86cnvt_.bkp RECID=7 STAMP=1247966020
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd1_TAG20261030T011346_og86d6r1_.bkp RECID=8 STAMP=1247966038
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_nnnd1_TAG20261030T011346_og86dz3h_.bkp RECID=9 STAMP=1247966063
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_annnn_NIVEL1_og86f6sb_.bkp RECID=10 STAMP=1247966070
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/autobackup/2026_10_30/o1_mf_s_1247966072_og86f8tg_.bkp RECID=11 STAMP=1247966072
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_annnn_ARCH_og86g4xt_.bkp RECID=12 STAMP=1247966100
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/autobackup/2026_10_30/o1_mf_s_1247966102_og86g6s8_.bkp RECID=13 STAMP=1247966102
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/opt/oracle/fast_recovery_area/FREE/autobackup/2026_10_30/o1_mf_s_1247967099_og87fd7q_.bkp RECID=14 STAMP=1247967100
+Crosschecked 14 objects
+
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=38 device type=DISK
+validation succeeded for archived log
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_12_og85y5lt_.arc RECID=1 STAMP=1247965590
+validation succeeded for archived log
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_13_og8614qw_.arc RECID=2 STAMP=1247965684
+validation succeeded for archived log
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_14_og868qsd_.arc RECID=3 STAMP=1247965927
+validation succeeded for archived log
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_15_og86cmqj_.arc RECID=4 STAMP=1247966020
+validation succeeded for archived log
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_16_og86f61c_.arc RECID=5 STAMP=1247966070
+validation succeeded for archived log
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_17_og86g3qw_.arc RECID=6 STAMP=1247966099
+validation succeeded for archived log
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_18_og86g45k_.arc RECID=7 STAMP=1247966100
+Crosschecked 7 objects
+
+
+Statement processed
+
+Starting backup at 30-OCT-26
+current log archived
+using channel ORA_DISK_1
+skipping archived logs of thread 1 from sequence 12 to 18; already backed up
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=19 RECID=8 STAMP=1247967229
+input archived log thread=1 sequence=20 RECID=9 STAMP=1247967229
+channel ORA_DISK_1: starting piece 1 at 30-OCT-26
+channel ORA_DISK_1: finished piece 1 at 30-OCT-26
+piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_annnn_ARCH_og87kg8x_.bkp tag=ARCH comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:02:42
+Finished backup at 30-OCT-26
+
+Starting Control File and SPFILE Autobackup at 30-OCT-26
+piece handle=/opt/oracle/fast_recovery_area/FREE/autobackup/2026_10_30/o1_mf_s_1247967393_og87pkq5_.bkp comment=NONE
+Finished Control File and SPFILE Autobackup at 30-OCT-26
+
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to recovery window of 7 days
+using channel ORA_DISK_1
+no obsolete backups found
+
+using channel ORA_DISK_1
+specification does not match any backup in the repository
+
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time #Pieces #Copies Compressed Tag
+------- -- -- - ----------- --------------- ------- ------- ---------- ---
+1       B  A  A DISK        30-OCT-26       1       1       YES        NIVEL0
+2       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+3       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+4       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+5       B  A  A DISK        30-OCT-26       1       1       YES        NIVEL0
+6       B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T011210
+7       B  A  A DISK        30-OCT-26       1       1       YES        NIVEL1
+8       B  1  A DISK        30-OCT-26       1       1       YES        TAG20261030T011346
+9       B  1  A DISK        30-OCT-26       1       1       YES        TAG20261030T011346
+10      B  A  A DISK        30-OCT-26       1       1       YES        NIVEL1
+11      B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T011432
+12      B  A  A DISK        30-OCT-26       1       1       YES        ARCH
+13      B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T011502
+14      B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T013139
+15      B  A  A DISK        30-OCT-26       1       1       YES        ARCH
+16      B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T013633
+
+Recovery Manager complete.
+30/10 01:36 | Backup archivelog: OK em 4 min 57 s, 3 MB gravados (23 MB lidos)

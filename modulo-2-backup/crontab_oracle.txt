@@ -1,0 +1,9 @@
+# Agenda de backups do usuário oracle
+# Instalar:  crontab crontab_oracle.txt      Conferir:  crontab -l
+# min hora dia mês dia_semana  comando
+# Domingo 01:00: nível 0 (base da semana)
+0  1 * * 0    /home/oracle/modulo-2-backup/backup_rman.sh nivel0      >/dev/null 2>&1
+# Segunda a sábado 01:00: nível 1 (só o que mudou)
+0  1 * * 1-6  /home/oracle/modulo-2-backup/backup_rman.sh nivel1      >/dev/null 2>&1
+# De hora em hora: archivelogs (no máximo 1 hora de perda mesmo se o servidor sumir)
+30 * * * *    /home/oracle/modulo-2-backup/backup_rman.sh archivelog  >/dev/null 2>&1

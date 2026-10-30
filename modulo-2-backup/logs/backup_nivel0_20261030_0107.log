@@ -1,0 +1,115 @@
+### backup_nivel0_20261030_0107 | 30/10/2026 01:07:56 | oraclelab.localdomain
+
+Recovery Manager: Release 23.26.3.0.0 - Production on Fri Oct 30 01:07:56 2026
+Version 23.26.3.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: FREE (DBID=1519974490)
+
+RMAN> CROSSCHECK BACKUP;
+2> CROSSCHECK ARCHIVELOG ALL;
+3> BACKUP INCREMENTAL LEVEL 0 DATABASE PLUS ARCHIVELOG TAG NIVEL0;
+4> DELETE NOPROMPT OBSOLETE;
+5> DELETE NOPROMPT EXPIRED BACKUP;
+6> LIST BACKUP SUMMARY;
+7> 
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=64 device type=DISK
+specification does not match any backup in the repository
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=64 device type=DISK
+validation succeeded for archived log
+archived log file name=/opt/oracle/fast_recovery_area/FREE/archivelog/2026_10_30/o1_mf_1_12_og85y5lt_.arc RECID=1 STAMP=1247965590
+Crosschecked 1 objects
+
+
+
+Starting backup at 30-OCT-26
+current log archived
+using channel ORA_DISK_1
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=12 RECID=1 STAMP=1247965590
+input archived log thread=1 sequence=13 RECID=2 STAMP=1247965684
+channel ORA_DISK_1: starting piece 1 at 30-OCT-26
+channel ORA_DISK_1: finished piece 1 at 30-OCT-26
+piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_annnn_NIVEL0_og8615qt_.bkp tag=NIVEL0 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 30-OCT-26
+
+Starting backup at 30-OCT-26
+using channel ORA_DISK_1
+channel ORA_DISK_1: starting compressed incremental level 0 datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00016 name=/opt/oracle/oradata/FREE/FREEPDB1/lab_dados01.dbf
+input datafile file number=00014 name=/opt/oracle/oradata/FREE/FREEPDB1/undotbs01.dbf
+input datafile file number=00013 name=/opt/oracle/oradata/FREE/FREEPDB1/sysaux01.dbf
+input datafile file number=00012 name=/opt/oracle/oradata/FREE/FREEPDB1/system01.dbf
+input datafile file number=00015 name=/opt/oracle/oradata/FREE/FREEPDB1/users01.dbf
+channel ORA_DISK_1: starting piece 1 at 30-OCT-26
+channel ORA_DISK_1: finished piece 1 at 30-OCT-26
+piece handle=/opt/oracle/fast_recovery_area/FREE/5EFCDFD9D72B3A5FE0650A0027DC954B/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og8618cw_.bkp tag=TAG20261030T010807 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:02:18
+channel ORA_DISK_1: starting compressed incremental level 0 datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00001 name=/opt/oracle/oradata/FREE/system01.dbf
+input datafile file number=00003 name=/opt/oracle/oradata/FREE/sysaux01.dbf
+input datafile file number=00011 name=/opt/oracle/oradata/FREE/undotbs01.dbf
+input datafile file number=00007 name=/opt/oracle/oradata/FREE/users01.dbf
+channel ORA_DISK_1: starting piece 1 at 30-OCT-26
+channel ORA_DISK_1: finished piece 1 at 30-OCT-26
+piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og865lcy_.bkp tag=TAG20261030T010807 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:01:16
+channel ORA_DISK_1: starting compressed incremental level 0 datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00004 name=/opt/oracle/oradata/FREE/pdbseed/sysaux01.dbf
+input datafile file number=00002 name=/opt/oracle/oradata/FREE/pdbseed/system01.dbf
+input datafile file number=00009 name=/opt/oracle/oradata/FREE/pdbseed/undotbs01.dbf
+channel ORA_DISK_1: starting piece 1 at 30-OCT-26
+channel ORA_DISK_1: finished piece 1 at 30-OCT-26
+piece handle=/opt/oracle/fast_recovery_area/FREE/55E26E818ABB346CE063499B5E643C8D/backupset/2026_10_30/o1_mf_nnnd0_TAG20261030T010807_og867y5x_.bkp tag=TAG20261030T010807 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:25
+Finished backup at 30-OCT-26
+
+Starting backup at 30-OCT-26
+current log archived
+using channel ORA_DISK_1
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=14 RECID=3 STAMP=1247965927
+channel ORA_DISK_1: starting piece 1 at 30-OCT-26
+channel ORA_DISK_1: finished piece 1 at 30-OCT-26
+piece handle=/opt/oracle/fast_recovery_area/FREE/backupset/2026_10_30/o1_mf_annnn_NIVEL0_og868rl8_.bkp tag=NIVEL0 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 30-OCT-26
+
+Starting Control File and SPFILE Autobackup at 30-OCT-26
+piece handle=/opt/oracle/fast_recovery_area/FREE/autobackup/2026_10_30/o1_mf_s_1247965930_og868tsr_.bkp comment=NONE
+Finished Control File and SPFILE Autobackup at 30-OCT-26
+
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to recovery window of 7 days
+using channel ORA_DISK_1
+no obsolete backups found
+
+using channel ORA_DISK_1
+specification does not match any backup in the repository
+
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time #Pieces #Copies Compressed Tag
+------- -- -- - ----------- --------------- ------- ------- ---------- ---
+1       B  A  A DISK        30-OCT-26       1       1       YES        NIVEL0
+2       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+3       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+4       B  0  A DISK        30-OCT-26       1       1       YES        TAG20261030T010807
+5       B  A  A DISK        30-OCT-26       1       1       YES        NIVEL0
+6       B  F  A DISK        30-OCT-26       1       1       YES        TAG20261030T011210
+
+Recovery Manager complete.
+30/10 01:12 | Backup nivel0: OK em 4 min 18 s, 914 MB gravados (5218 MB lidos)
